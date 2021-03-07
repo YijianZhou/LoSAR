@@ -31,6 +31,7 @@ read_fpha = read_rc_pha
 get_data_dict = get_rc_data
 train_ratio, valid_ratio = 0.9, 0.1
 freq_band = [2,40]
+global_max_norm = cfg.global_max_norm
 to_filter = [True, False][0]
 num_aug = 2
 add_noise = False # whether add gaussian noise
@@ -95,7 +96,7 @@ class Positive(Dataset):
             end_time = start_time + win_len
             st = obspy_slice(stream, start_time, end_time)
             if 0 in st.max() or len(st)!=3: continue
-            st = st.detrend('demean').normalize() # note: no detrend here
+            st = st.detrend('demean').normalize(global_max=global_max_norm) # note: no detrend here
             # write & record out_paths
             if samp_class=='train': train_paths_i.append([])
             if samp_class=='valid': valid_paths_i.append([])

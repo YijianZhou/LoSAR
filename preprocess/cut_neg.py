@@ -36,6 +36,7 @@ train_ratio, valid_ratio = 0.9, 0.1
 remote_ratio = 0.5
 freq_band = [2,40]
 to_filter = [True, False][0]
+global_max_norm = cfg.global_max_norm
 num_aug = 1
 
 def get_sta_date(event_list, sta_dict):
@@ -117,7 +118,7 @@ class Negative(Dataset):
             # slice & prep
             st = obspy_slice(stream, start_time, end_time)
             if 0 in st.max() or len(st)!=3: continue
-            st = st.detrend('demean').normalize() # note: no detrend here
+            st = st.detrend('demean').normalize(global_max=global_max_norm) # note: no detrend here
             # write & record out_paths
             if samp_class=='train': train_paths_i.append([])
             if samp_class=='valid': valid_paths_i.append([])
