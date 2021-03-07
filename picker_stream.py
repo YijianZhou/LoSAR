@@ -23,6 +23,7 @@ step_stride = cfg.step_stride
 step_stride_npts = int(step_stride * samp_rate)
 num_steps = cfg.num_steps
 freq_band = cfg.freq_band
+global_max_norm = cfg.global_max_norm
 # picker config
 batch_size = cfg.picker_batch_size
 tp_dev = cfg.tp_dev
@@ -216,7 +217,8 @@ class CERP_Picker_Stream(object):
   # preprocess cuda data (in-place)
   def preprocess_cuda(self, data):
     data -= torch.mean(data, axis=1).view(num_chn,1)
-    data /= torch.max(abs(data), axis=1).values.view(num_chn,1)
+    if global_max_norm: data /= torch.max(abs(data))
+    else: data /= torch.max(abs(data), axis=1).values.view(num_chn,1)
     return data
 
 
