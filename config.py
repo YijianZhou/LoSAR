@@ -11,6 +11,7 @@ class Config(object):
     self.step_stride = 0.2
     self.num_steps = int((self.win_len - self.step_len) / self.step_stride) + 1
     self.freq_band = [2,40]
+    self.global_max_norm = True
     # cnn model
     self.num_cnn_layers = 8
     self.num_cnn_kernels = 32
