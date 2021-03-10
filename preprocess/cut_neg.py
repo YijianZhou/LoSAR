@@ -6,19 +6,17 @@ import numpy as np
 import torch.multiprocessing as mp
 from torch.utils.data import Dataset, DataLoader
 from obspy import read, UTCDateTime
-from reader import get_rc_data, read_rc_pha, read_pad_fsta, dtime2str
+from reader import get_data_dict, read_fpha, read_pad_fsta, dtime2str
 from signal_lib import preprocess, calc_dist_km
 from sac import obspy_slice
 import warnings
 warnings.filterwarnings("ignore")
 
 # i/o paths
-data_dir = '/data2/Ridgecrest'
-fpha = 'input/rc_scsn.pha'
-#fpha = 'input/rc_pad_hyp.pha'
-fsta = 'input/rc_scsn_pad.sta'
-out_root = '/data3/bigdata/zhouyj/RC_train/neg-scsn_win-20s_freq-2-40hz'
-#out_root = '/data3/bigdata/zhouyj/RC_train/neg-pad_win-20s_freq-2-40hz'
+data_dir = '/data/Continuous_Data'
+fpha = 'input/example.pha'
+fsta = 'input/example.sta'
+out_root = 'output/neg-example'
 train_root = os.path.join(out_root,'train')
 valid_root = os.path.join(out_root,'valid')
 fout_train_paths = os.path.join(out_root,'train_neg.npy')
@@ -38,6 +36,7 @@ freq_band = [2,40]
 to_filter = [True, False][0]
 global_max_norm = cfg.global_max_norm
 num_aug = 1
+
 
 def get_sta_date(event_list, sta_dict):
     sta_date_dict = {}
