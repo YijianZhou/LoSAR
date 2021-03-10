@@ -6,18 +6,16 @@ import numpy as np
 import torch.multiprocessing as mp
 from torch.utils.data import Dataset, DataLoader
 from obspy import read, UTCDateTime
-from reader import get_rc_data, read_rc_pha, dtime2str
+from reader import get_data_dict, read_fpha, dtime2str
 from signal_lib import preprocess
 from sac import obspy_slice
 import warnings
 warnings.filterwarnings("ignore")
 
 # i/o paths
-data_dir = '/data2/Ridgecrest'
-fpha = 'input/rc_scsn.pha'
-#fpha = 'input/rc_pad_hyp.pha'
-out_root = '/data3/bigdata/zhouyj/RC_train/pos-scsn_win-20s_freq-2-40hz'
-#out_root = '/data3/bigdata/zhouyj/RC_train/pos-pad_win-20s_freq-2-40hz'
+data_dir = '/data/Continuous_Data'
+fpha = 'input/example.pha'
+out_root = 'output/pos-example'
 train_root = os.path.join(out_root,'train')
 valid_root = os.path.join(out_root,'valid')
 fout_train_paths = os.path.join(out_root,'train_pos.npy')
@@ -25,16 +23,18 @@ fout_valid_paths = os.path.join(out_root,'valid_pos.npy')
 # cut params
 num_workers = 10
 samp_rate = 100
-win_len = 20
-rand_dt = 10 # rand before P
-read_fpha = read_rc_pha
-get_data_dict = get_rc_data
+win_len = [20,40][1]
+rand_dt = win_len / 2 # rand before P
+read_fpha = read_fpha
+get_data_dict = get_data_dict
 train_ratio, valid_ratio = 0.9, 0.1
-freq_band = [2,40]
-global_max_norm = cfg.global_max_norm
+freq_band = [[2,40],[1,40]][1]
 to_filter = [True, False][0]
-num_aug = 2
-add_noise = False # whether add gaussian noise
+global_max_norm = True
+num_aug = 3
+max_noise = [0,0.8][1] # n times P std
+noise_win = 5 # sec
+
 
 def get_sta_date(event_list):
     sta_date_dict = {}
@@ -59,6 +59,13 @@ def get_sta_date(event_list):
                 sta_date_dict[sta_date] = [[samp_class, event_name, tp, ts]]
             else: sta_date_dict[sta_date].append([samp_class, event_name, tp, ts])
     return sta_date_dict
+
+
+def add_noise(tr, tp, ts):
+    if tp>ts: return tr
+    scale = np.random.rand(1)[0] * max_noise * np.std(tr.slice(tp, ts).data)
+    tr.data += np.random.normal(loc=np.mean(tr.data), scale=scale, size=len(tr))
+    return tr
 
 
 class Positive(Dataset):
@@ -101,6 +108,7 @@ class Positive(Dataset):
             if samp_class=='train': train_paths_i.append([])
             if samp_class=='valid': valid_paths_i.append([])
             for tr in st:
+                if aug_idx>0 and max_noise>0: tr = add_noise(tr, tp, ts)
                 out_path = os.path.join(out_dir,'%s.%s.%s'%(aug_idx,samp_name,tr.stats.channel))
                 tr.stats.sac.t0, tr.stats.sac.t1 = tp-start_time, ts-start_time
                 tr.write(out_path, format='sac')
