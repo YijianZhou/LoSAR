@@ -1,7 +1,8 @@
-""" Pick event data with CERP_Pytorch
+""" Pick event data with CERP
 """
 import os, shutil, glob, sys
 sys.path.append('/home/zhouyj/software/CERP_Pytorch')
+import time
 import numpy as np
 import torch.multiprocessing as mp
 from torch.utils.data import Dataset
@@ -14,20 +15,22 @@ warnings.filterwarnings("ignore")
 cdrp_dir = '/home/zhouyj/software/CERP_Pytorch'
 shutil.copyfile('config_example.py', os.path.join(cdrp_dir, 'config.py'))
 import picker_event as picker
-data_root = '/data3/bigdata/zhouyj/RC_events_scsn'
+data_root = '/data3/bigdata/zhouyj/Example_events'
 samples = np.load(os.path.join(data_root, 'data_paths.npy'))
-fout = open('output/test.picks','w')
-ckpt_dir = 'output/rc_ckpt/PpkNet6'
+fout = open('output/example.picks','w')
+ckpt_dir = 'output/PpkNet_example'
 ckpt_step = [None][0]
 # picking params
-win_len = 20
-time_shift = 10 # rand pre-P
+win_len = [20,40][1]
+rand_win = [[3,10],[10,15]][1] # rand pre-P
+rand_len = rand_win[1] - rand_win[0]
 freq_band = [2,40]
 to_filter = False
+global_max_norm = True
 batch_size = 10
-num_workers = 0
-gpu_idx = ['0','1'][0]
-picker = picker.CDRP_Picker_Event(ckpt_dir, ckpt_step, gpu_idx=gpu_idx)
+num_workers = 10
+gpu_idx = ['0','1'][1]
+picker = picker.CERP_Picker_Event(ckpt_dir, ckpt_step, gpu_idx=gpu_idx)
 
 
 def preprocess(st):
@@ -39,7 +42,7 @@ def preprocess(st):
         elif freq_min and not freq_max:
             st = st.filter('highpass', freq=freq_min)
         else: print('filter type not supported')
-    return st.normalize()
+    return st
 
 
 def read_one_stream(st_paths):
@@ -58,11 +61,13 @@ def read_one_stream(st_paths):
     start_time = header.starttime
     st_name = '%s_%s.%s'%(event_name,net,sta)
     # rand time shift
-    dt =  time_shift * np.random.rand(1)[0]
+    dt =  rand_win[0] + rand_len * np.random.rand(1)[0]
     tp_target = dt
     ts_target = dt + header.sac.t1 - header.sac.t0
     start_time = start_time + header.sac.t0 - dt
     stream = stream.slice(start_time, start_time+win_len)
+    if len(stream)!=3: return [], None
+    stream = stream.normalize(global_max=global_max_norm)
     return stream, [st_name, start_time, tp_target, ts_target]
 
 
@@ -99,6 +104,7 @@ if __name__ == '__main__':
     mp.set_start_method('spawn', force=True) # 'spawn' or 'forkserver'
     dataset = Pick_One_Batch(samples)
     dataloader = DataLoader(dataset, batch_size=None, num_workers=num_workers)
+    t = time.time()
     for i, [picks, headers] in enumerate(dataloader):
         if i%100==0: print('{}/{} batch done/total'.format(i, len(dataset)))
         write_pick(picks.numpy(), headers, fout)
