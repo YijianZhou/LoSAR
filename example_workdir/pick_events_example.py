@@ -47,7 +47,9 @@ def read_one_stream(st_paths):
     stream  = read(st_paths[0])
     stream += read(st_paths[1])
     stream += read(st_paths[2])
+    if len(stream)!=3: return [], None
     stream = preprocess(stream)
+    if len(stream)!=3: return [], None
     event_dir, fname = os.path.split(st_paths[0])
     event_name = os.path.basename(event_dir)
     net, sta = fname.split('.')[0:2]
@@ -83,6 +85,7 @@ class Pick_One_Batch(Dataset):
     streams, headers = [], []
     for st_paths in self.samples[index*batch_size:(index+1)*batch_size]:
         stream, header = read_one_stream(st_paths)
+        if len(stream)==0: continue
         streams.append(stream)
         headers.append(header)
     picks = picker.pick(streams)
