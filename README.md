@@ -1,5 +1,5 @@
 # CERP_Pytorch
-CNN-Event detector & RNN-Phase picker (CERP), implemented in Pytorch 
+**C**NN-**E**vent detector & **R**NN-**P**hase picker (CERP), implemented in Pytorch 
 
 
 ### Reference <br>
