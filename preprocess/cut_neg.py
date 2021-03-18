@@ -34,7 +34,7 @@ train_ratio, valid_ratio = 0.9, 0.1
 remote_ratio = 0.5
 freq_band = [2,40]
 to_filter = [True, False][0]
-global_max_norm = cfg.global_max_norm
+global_max_norm = True
 num_aug = 1
 
 
