@@ -46,6 +46,7 @@ class Pick_One_Day(Dataset):
     fout_det = open(os.path.join(out_root, '%s.det'%(date.date)),'w')
     data_dict = get_data_dict(date, data_root)
     for net_sta, data_paths in data_dict.items():
+        if net_sta not in sta_dict: continue
         print('-'*40)
         print('picking %s %s'%(net_sta, date.date))
         try:
