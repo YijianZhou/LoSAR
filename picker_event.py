@@ -3,7 +3,7 @@ import time
 import torch
 import numpy as np
 import config
-from models import DetNet, PpkNet
+from models import PpkNet
 import warnings
 warnings.filterwarnings("ignore")
 
