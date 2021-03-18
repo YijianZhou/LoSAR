@@ -12,8 +12,8 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # i/o paths
-cdrp_dir = '/home/zhouyj/software/CERP_Pytorch'
-shutil.copyfile('config_example.py', os.path.join(cdrp_dir, 'config.py'))
+cerp_dir = '/home/zhouyj/software/CERP_Pytorch'
+shutil.copyfile('config_example.py', os.path.join(cerp_dir, 'config.py'))
 import picker_event as picker
 data_root = '/data3/bigdata/zhouyj/Example_events'
 samples = np.load(os.path.join(data_root, 'data_paths.npy'))
