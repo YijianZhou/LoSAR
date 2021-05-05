@@ -1,8 +1,6 @@
-""" Configure file for CERP_Pytorch
-"""
-
 class Config(object):
-
+  """ Configure file for CERP_Pytorch
+  """
   def __init__(self):
 
     # data preprocessing
@@ -13,6 +11,7 @@ class Config(object):
     self.step_stride = 0.2
     self.num_steps = int((self.win_len - self.step_len) / self.step_stride) + 1
     self.freq_band = [2,40]
+    self.global_max_norm = True
     # cnn model
     self.num_cnn_layers = 8
     self.num_cnn_kernels = 32
@@ -24,7 +23,7 @@ class Config(object):
     self.cnn_lr = 1e-4
     self.cnn_ckpt_step = 25
     self.cnn_summary_step = 10
-    self.cnn_num_workers = 2 # set to 0 if use lbdm or hdf5
+    self.cnn_num_workers = 10 # set to 0 if use lbdm or hdf5
     # rnn model
     self.rnn_hidden_size = 32
     self.num_rnn_layers = 2
@@ -40,4 +39,11 @@ class Config(object):
     self.picker_batch_size = 100
     self.tp_dev = 2.
     self.ts_dev = 2.
+    self.amp_win = [1,4] # sec pre-P & post-S for amp calc
+    self.to_repick = [False, True][1]
+    self.p_win = [1.,1.]
+    self.s_win = [1.,1.]
+    self.win_kurt = [5.,1.]
+    self.win_sta  = [0.4,1.]
+    self.win_lta  = [2.,2.]
 

@@ -1,8 +1,8 @@
-""" Pick stream data, RC
+""" Pick stream data
 """
 import os, shutil, glob, sys
 sys.path.append('/home/zhouyj/software/CERP_Pytorch')
-sys.path.append('/home/zhouyj/software/PAD')
+sys.path.append('/home/zhouyj/software/PAL')
 import numpy as np
 import torch.multiprocessing as mp
 import data_pipeline as dp
@@ -15,22 +15,22 @@ warnings.filterwarnings("ignore")
 
 # i/o paths
 cdrp_dir = '/home/zhouyj/software/CERP_Pytorch'
-fsta = 'input/rc_scsn_pad.sta'
-data_root = '/data2/Ridgecrest'
-time_range = ['20190704-20190725','20190704-20190715','20190715-20190725'][2]
-out_root = 'output/rc_scsn'
+fsta = 'input/example.sta'
+data_root = '/data/Example_Data'
+time_range = '20190704-20190725'
+out_root = 'output/example'
 if not os.path.exists(out_root): os.makedirs(out_root)
-cnn_ckpt_dir = 'output/rc_ckpt/DetNet8'
-rnn_ckpt_dir = 'output/rc_ckpt/PpkNet6'
-cnn_ckpt_step = [None,15000][0]
-rnn_ckpt_step = [None,5000][0]
+cnn_ckpt_dir = 'output/DetNet'
+rnn_ckpt_dir = 'output/PpkNet'
+cnn_ckpt_step = None
+rnn_ckpt_step = None
 # picking params
 gpu_idx =['0','1'][1]
 num_workers = 5
-shutil.copyfile('config_rc.py', os.path.join(cdrp_dir, 'config.py'))
+shutil.copyfile('config_example.py', os.path.join(cdrp_dir, 'config.py'))
 import picker_stream as picker
 picker = picker.CDRP_Picker_Stream(cnn_ckpt_dir, rnn_ckpt_dir, cnn_ckpt_step, rnn_ckpt_step, gpu_idx)
-get_data_dict = dp.get_rc_data
+get_data_dict = dp.get_data_dict
 get_sta_dict = dp.get_sta_dict
 sta_dict = get_sta_dict(fsta)
 

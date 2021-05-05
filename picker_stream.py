@@ -4,6 +4,7 @@ import time
 import torch
 import torch.nn.functional as F
 import numpy as np
+from scipy.stats import kurtosis
 import config
 from models import DetNet, PpkNet
 import warnings
@@ -25,9 +26,15 @@ num_steps = cfg.num_steps
 freq_band = cfg.freq_band
 global_max_norm = cfg.global_max_norm
 # picker config
+to_repick = cfg.to_repick
 batch_size = cfg.picker_batch_size
 tp_dev = cfg.tp_dev
 ts_dev = cfg.ts_dev
+p_win_npts = [int(samp_rate*win) for win in cfg.p_win]
+s_win_npts = [int(samp_rate*win) for win in cfg.s_win]
+win_kurt_npts = [int(win*samp_rate) for win in cfg.win_kurt]
+win_sta_npts = [int(win*samp_rate) for win in cfg.win_sta]
+win_lta_npts = [int(win*samp_rate) for win in cfg.win_lta]
 amp_win = cfg.amp_win
 
 
@@ -67,14 +74,14 @@ class CERP_Picker_Stream(object):
     if end_time < start_time + win_len: return 
     num_win = int((end_time - start_time - win_len) / win_stride) + 1
     st_len_npts = min([len(trace) for trace in stream])
-    st_data = np.array([trace.data for trace in stream], dtype=np.float32)
-    st_data = torch.from_numpy(st_data).cuda(device=self.device)
+    st_data = np.array([trace.data[0:st_len_npts] for trace in stream], dtype=np.float32)
+    st_data_cuda = torch.from_numpy(st_data).cuda(device=self.device)
     win_data = torch.zeros([num_win, num_chn, win_len_npts], dtype=torch.float32, device=self.device)
     for win_idx in range(num_win):
-        win_data_i = st_data[:,win_idx*win_stride_npts : win_idx*win_stride_npts+win_len_npts]
+        win_data_i = st_data_cuda[:,win_idx*win_stride_npts : win_idx*win_stride_npts+win_len_npts]
         win_data[win_idx] = self.preprocess_cuda(win_data_i.clone())
     print('  {} {} | {} windows preprocessed | {:.2f}s'.format(net_sta, start_time.date, num_win, time.time()-t))
-    del st_data
+    del st_data_cuda
     # 2. run DetNet & PpkNet
     det_idx, det_prob = self.run_det(win_data)
     num_det = len(det_idx)
@@ -97,18 +104,21 @@ class CERP_Picker_Stream(object):
         if det_prob[i]<det_prob[i+1]: to_drop.append(i)
         else: to_drop.append(i+1)
     print('  %s picks dropped'%len(to_drop))
-    # 3.2 get s_amp
-    print('  getting s_amp & write picks')
+    # 3.2 repick & get s_amp
+    print('  repick & get s_amp')
     picks = []
     for i in range(num_det):
         if i in to_drop: continue
         win_idx = det_idx[i]
         win_t0 = start_time + win_idx*win_stride
         tp, ts = [win_t0+ti for ti in picks_raw[i]]
+        if to_repick: 
+            tp_sec, ts_sec = self.repick(st_data, tp-start_time, ts-start_time)
+            tp, ts = [start_time + t_sec for t_sec in [tp_sec, ts_sec]]
         # get s_amp
-        st = stream.slice(tp-amp_win[0], ts+amp_win[1])
-        st_data = np.array([tr.data for tr in st])
-        s_amp = self.get_amp(st_data)
+        st = stream.slice(tp-amp_win[0], ts+amp_win[1]).copy()
+        amp_data = np.array([tr.data for tr in st])
+        s_amp = self.get_amp(amp_data)
         picks.append([net_sta, tp, ts, s_amp, det_prob[i]])
         if fout_pick:
             fout_pick.write('{},{},{},{},{:.4f}\n'.format(net_sta, tp, ts, s_amp, det_prob[i]))
@@ -191,7 +201,7 @@ class CERP_Picker_Stream(object):
     # align time
     start_time = max([tr.stats.starttime for tr in st])
     end_time = min([tr.stats.endtime for tr in st])
-    if end_time < start_time + win_len: return  []
+    if end_time < start_time + win_len: return []
     st = st.slice(start_time, end_time, nearest_sample=True)
     # resample data
     org_rate = int(st[0].stats.sampling_rate)
@@ -224,10 +234,118 @@ class CERP_Picker_Stream(object):
 
   # get S amplitide
   def get_amp(self, velo):
-    # remove mean
     velo -= np.reshape(np.mean(velo, axis=1), [velo.shape[0],1])
-    # velocity to displacement
     disp = np.cumsum(velo, axis=1)
     disp /= samp_rate
     return np.amax(np.sum(disp**2, axis=0))**0.5
+
+
+  def repick(self, st_data, tp0, ts0):
+    # extract data
+    tp0_idx = int(tp0*samp_rate)
+    ts0_idx = int(ts0*samp_rate)
+    # 1. repick P
+    idx0 = tp0_idx - p_win_npts[0] - win_lta_npts[0]
+    idx1 = tp0_idx + min(p_win_npts[1], (ts0_idx-tp0_idx)//2) + win_sta_npts[0]
+    if idx0<0 or idx1>st_data.shape[1]: return tp0, ts0
+    data_p = st_data[2,idx0:idx1]**2
+    cf_p = self.calc_sta_lta(data_p, win_lta_npts[0], win_sta_npts[0])
+    tp_idx = np.argmax(cf_p) + idx0
+    dt_idx = self.find_first_peak(data_p[0:tp_idx-idx0][::-1])
+    tp_idx -= dt_idx
+    tp = tp_idx / samp_rate
+    # 2. pick S
+    # 2.1 get amp_peak
+    idx0 = max(tp_idx+(ts0_idx-tp_idx)//2, ts0_idx-s_win_npts[0])
+    idx1 = ts0_idx + s_win_npts[1]
+    if idx1<=idx0 or idx1>len(st_data[0]): return tp, ts0
+    data_s = np.sum(st_data[0:2, idx0:idx1]**2, axis=0)
+    ts_min = idx0
+    ts_max = min(idx1, idx0 + np.argmax(data_s) + 1)
+    if len(st_data[0]) < ts_max + win_sta_npts[1]: return tp, ts0
+    # 2.2 long_win kurt --> t_max
+    idx0 = ts_min - win_kurt_npts[0]
+    idx1 = ts_max
+    if min(idx0,idx1)<0 or idx1-idx0<win_kurt_npts[0]: return tp, ts0
+    data_s = np.sum(st_data[0:2, idx0:idx1]**2, axis=0)
+    data_s /= np.amax(data_s)
+    kurt_long = self.calc_kurtosis(data_s, win_kurt_npts[0])
+    # 2.3 STA/LTA --> t_min
+    idx0 = ts_min - win_lta_npts[1]
+    idx1 = ts_max + win_sta_npts[1]
+    data_s = np.sum(st_data[0:2, idx0:idx1]**2, axis=0)
+    cf_s = self.calc_sta_lta(data_s, win_lta_npts[1], win_sta_npts[1])[win_lta_npts[1]:]
+    # 2.4 pick S on short_win kurt
+    dt_max = np.argmax(kurt_long)
+    dt_max -= self.find_first_peak(kurt_long[0:dt_max+1][::-1])
+    dt_min = np.argmax(cf_s) # relative to ts_min
+    if dt_min>=dt_max:
+        t_data = dt_min + win_lta_npts[1] # time relative to data
+        dt_data = self.find_first_peak(data_s[0:t_data][::-1])
+        ts_idx = t_data - dt_data + idx0
+        ts = ts_idx / samp_rate
+        return tp, ts
+    idx0 = ts_min + dt_min - win_kurt_npts[1]
+    idx1 = ts_min + dt_max
+    data_s = np.sum(st_data[0:2, idx0:idx1]**2, axis=0)
+    data_s /= np.amax(data_s)
+    kurt_short = self.calc_kurtosis(data_s, win_kurt_npts[1])
+    kurt_max = np.argmax(kurt_short) if np.argmax(kurt_short)>0 else dt_max-dt_min
+    t_data = kurt_max + win_kurt_npts[1] # idx in data domain
+    dt_data = self.find_first_peak(data_s[0:t_data][::-1])
+    ts_idx = t_data - dt_data + idx0
+    ts = ts_idx / samp_rate
+    return tp, ts
+
+
+  # calc STA/LTA for a trace of data (abs or square)
+  def calc_sta_lta(self, data, win_lta_npts, win_sta_npts):
+    npts = len(data)
+    if npts < win_lta_npts + win_sta_npts:
+        print('input data too short!')
+        return np.zeros(1)
+    sta = np.zeros(npts)
+    lta = np.ones(npts)
+    data_cum = np.cumsum(data)
+    sta[:-win_sta_npts] = data_cum[win_sta_npts:] - data_cum[:-win_sta_npts]
+    sta /= win_sta_npts
+    lta[win_lta_npts:]  = data_cum[win_lta_npts:] - data_cum[:-win_lta_npts]
+    lta /= win_lta_npts
+    sta_lta = sta/lta
+    sta_lta[np.isinf(sta_lta)] = 0.
+    sta_lta[np.isnan(sta_lta)] = 0.
+    return sta_lta
+
+
+  # calc kurtosis trace
+  def calc_kurtosis(self, data, win_kurt_npts):
+    npts = len(data) - win_kurt_npts + 1
+    kurt = np.zeros(npts)
+    for i in range(npts):
+        kurt[i] = kurtosis(data[i:i+win_kurt_npts])
+    return kurt
+
+
+  def find_first_peak(self, data):
+    npts = len(data)
+    if npts<2: return 0
+    delta_d = data[1:npts] - data[0:npts-1]
+    if min(delta_d)>=0 or max(delta_d)<=0: return 0
+    neg_idx = np.where(delta_d<0)[0]
+    pos_idx = np.where(delta_d>=0)[0]
+    return max(neg_idx[0], pos_idx[0])
+
+
+  def find_second_peak(self, data):
+    npts = len(data)
+    if npts<2: return 0
+    delta_d = data[1:npts] - data[0:npts-1]
+    if min(delta_d)>=0 or max(delta_d)<=0: return 0
+    neg_idx = np.where(delta_d<0)[0]
+    pos_idx = np.where(delta_d>=0)[0]
+    first_peak = max(neg_idx[0], pos_idx[0])
+    neg_peak = neg_idx[neg_idx>first_peak]
+    pos_peak = pos_idx[pos_idx>first_peak]
+    if len(neg_peak)==0 or len(pos_peak)==0: return first_peak
+    return max(neg_peak[0], pos_peak[0])
 

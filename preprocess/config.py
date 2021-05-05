@@ -23,7 +23,7 @@ class Config(object):
     self.cnn_lr = 1e-4
     self.cnn_ckpt_step = 25
     self.cnn_summary_step = 10
-    self.cnn_num_workers = 2 # set to 0 if use lbdm or hdf5
+    self.cnn_num_workers = 10 # set to 0 if use lbdm or hdf5
     # rnn model
     self.rnn_hidden_size = 32
     self.num_rnn_layers = 2
@@ -40,4 +40,10 @@ class Config(object):
     self.tp_dev = 2.
     self.ts_dev = 2.
     self.amp_win = [1,4] # sec pre-P & post-S for amp calc
+    self.to_repick = [False, True][1]
+    self.p_win = [1.,1.]
+    self.s_win = [1.,1.]
+    self.win_kurt = [5.,1.]
+    self.win_sta  = [0.4,1.]
+    self.win_lta  = [2.,2.]
 

@@ -1,4 +1,4 @@
-""" Pick event data with CERP
+""" Pick event data 
 """
 import os, shutil, glob, sys
 sys.path.append('/home/zhouyj/software/CERP_Pytorch')
