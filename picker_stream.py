@@ -16,7 +16,7 @@ samp_rate = cfg.samp_rate
 num_chn = cfg.num_chn
 win_len = cfg.win_len
 win_len_npts = int(win_len * samp_rate)
-win_stride = win_len / 2
+win_stride = cfg.win_stride
 win_stride_npts = int(win_stride * samp_rate)
 step_len = cfg.step_len
 step_len_npts = int(step_len * samp_rate)
@@ -76,17 +76,10 @@ class CERP_Picker_Stream(object):
     st_len_npts = min([len(trace) for trace in stream])
     st_data = np.array([trace.data[0:st_len_npts] for trace in stream], dtype=np.float32)
     st_data_cuda = torch.from_numpy(st_data).cuda(device=self.device)
-    win_data = torch.zeros([num_win, num_chn, win_len_npts], dtype=torch.float32, device=self.device)
-    for win_idx in range(num_win):
-        win_data_i = st_data_cuda[:,win_idx*win_stride_npts : win_idx*win_stride_npts+win_len_npts]
-        win_data[win_idx] = self.preprocess_cuda(win_data_i.clone())
-    print('  {} {} | {} windows preprocessed | {:.2f}s'.format(net_sta, start_time.date, num_win, time.time()-t))
-    del st_data_cuda
     # 2. run DetNet & PpkNet
-    det_idx, det_prob = self.run_det(win_data)
+    det_idx, det_prob = self.run_det(st_data_cuda, num_win)
     num_det = len(det_idx)
-    win_data = win_data[det_idx]
-    picks_raw = self.run_ppk(win_data)
+    picks_raw = self.run_ppk(st_data_cuda, det_idx)
     # 3.1 select picks
     print('3. select & write picks')
     to_drop = []
@@ -129,15 +122,23 @@ class CERP_Picker_Stream(object):
 
 
   # 2.1 detect earthquake windows
-  def run_det(self, win_data):
+  def run_det(self, st_data_cuda, num_win):
     print('2.1 run DetNet (CNN)')
     t = time.time()
+    num_batch = int(np.ceil(num_win / batch_size))
     det_idx = torch.tensor([], dtype=torch.int, device=self.device)
     det_prob = torch.tensor([], device=self.device)
-    num_batch = int(np.ceil(win_data.shape[0] / batch_size))
     for batch_idx in range(num_batch):
+        # get win_data
+        n_win = batch_size if batch_idx<num_batch-1 else num_win%batch_size
+        if n_win==0: n_win = batch_size
+        win_data = torch.zeros([n_win, num_chn, win_len_npts], dtype=torch.float32, device=self.device)
+        for i in range(n_win):
+            win_idx = i + batch_idx*batch_size
+            win_data[i] = st_data_cuda[:,win_idx*win_stride_npts : win_idx*win_stride_npts+win_len_npts].clone()
+            win_data[i] = self.preprocess_cuda(win_data[i])
         # run DetNet
-        pred_logits = self.model_det(win_data[batch_idx*batch_size:(batch_idx+1)*batch_size])
+        pred_logits = self.model_det(win_data)
         pred_class = torch.argmax(pred_logits,1)
         pred_prob = F.softmax(pred_logits)[:,1].detach()
         # add det_idx & det_prob
@@ -152,16 +153,17 @@ class CERP_Picker_Stream(object):
 
 
   # 2.2 pick tp & ts of earthquake window
-  def run_ppk(self, win_data):
+  def run_ppk(self, st_data_cuda, det_idx):
     print('2.2 run PpkNet (RNN)')
-    print('  transfer event data into sequences')
-    win_seq = self.event2seq(win_data)
-    del win_data
+    num_win = len(det_idx)
+    num_batch = int(np.ceil(num_win / batch_size))
     t = time.time()
     picks = []
-    num_batch = int(np.ceil(win_seq.shape[0] / batch_size))
     for batch_idx in range(num_batch):
-        pred_logits = self.model_ppk(win_seq[batch_idx*batch_size:(batch_idx+1)*batch_size])
+        # get win_data
+        win_idx = det_idx[batch_idx*batch_size:(batch_idx+1)*batch_size]
+        win_seq = self.st2seq(st_data_cuda, win_idx)
+        pred_logits = self.model_ppk(win_seq)
         pred_classes = torch.argmax(pred_logits,2).cpu().numpy()
         # decode to sec
         for pred_class in pred_classes:
@@ -177,23 +179,22 @@ class CERP_Picker_Stream(object):
                 else step_len + step_stride * (pred_s[0]-0.5)
             else: ts = -1
             picks.append([tp, ts])
-    del win_seq
     print('  {} events picked | RNN run time {:.2f}s'.format(len(picks), time.time()-t))
     return np.array(picks)
 
-  
-  def event2seq(self, win_data):
-    t = time.time()
-    num_win = win_data.shape[0]
+
+  def st2seq(self, st_data_cuda, win_idx):
+    num_win = len(win_idx)
     win_seq = torch.zeros((num_win, num_steps, num_chn, step_len_npts), dtype=torch.float32, device=self.device)
-    for i in range(num_win):
-      for j in range(num_steps):
-        idx0 = j * step_stride_npts
-        idx1 = idx0 + step_len_npts
-        win_seq[i,j,:] = win_data[i,:,idx0:idx1]
-    print('  sequencing time {:.2f}s'.format(time.time()-t))
+    for i,win_i in enumerate(win_idx):
+        win_data = st_data_cuda[:,win_i*win_stride_npts : win_i*win_stride_npts+win_len_npts].clone()
+        win_data = self.preprocess_cuda(win_data)
+        for j in range(num_steps):
+            idx0 = j * step_stride_npts
+            idx1 = idx0 + step_len_npts
+            win_seq[i,j,:] = win_data[:,idx0:idx1]
     return win_seq.view([num_win, num_steps, step_len_npts*num_chn])
-  
+ 
 
   def preprocess(self, st):
     # check num_chn
