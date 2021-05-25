@@ -6,6 +6,7 @@ class Config(object):
     # data preprocessing
     self.samp_rate = 100
     self.win_len = 20 # sec
+    self.win_stride = 10
     self.num_chn = 3
     self.step_len = 0.8 # in sec
     self.step_stride = 0.2
