@@ -6,7 +6,7 @@ import zarr
 import torch.multiprocessing as mp
 import numpy as np
 from torch.utils.data import DataLoader
-import config_rc as config
+import config_example as config
 import warnings
 warnings.filterwarnings("ignore")
 
