@@ -9,8 +9,8 @@ shutil.copyfile('config_example.py', os.path.join(cdrp_dir, 'config.py'))
 # train params
 gpu_idx = 1
 model = ['DetNet','PpkNet'][0]
-zarr_path = '/data3/bigdata/zhouyj/example.zarr'
-ckpt_dir = 'output/rc_ckpt/PpkNet_example'
+zarr_path = 'output/example.zarr'
+ckpt_dir = 'output/rc_ckpt/PpkNet'
 resume = [False, True][0]
 
 # start training

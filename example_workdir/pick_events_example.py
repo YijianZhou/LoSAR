@@ -15,21 +15,21 @@ warnings.filterwarnings("ignore")
 cerp_dir = '/home/zhouyj/software/CERP_Pytorch'
 shutil.copyfile('config_example.py', os.path.join(cerp_dir, 'config.py'))
 import picker_event as picker
-data_root = '/data3/bigdata/zhouyj/Example_events'
+data_root = '/data/Example_events'
 samples = np.load(os.path.join(data_root, 'data_paths.npy'))
 fout = open('output/example.picks','w')
 ckpt_dir = 'output/PpkNet_example'
-ckpt_step = [None][0]
+ckpt_step = None # latest step
 # picking params
-win_len = [20,40][1]
-rand_win = [[3,10],[10,15]][1] # rand pre-P
+win_len = 20
+rand_win = [3,10] # rand pre-P
 rand_len = rand_win[1] - rand_win[0]
 freq_band = [2,40]
 to_filter = False
 global_max_norm = True
 batch_size = 10
 num_workers = 10
-gpu_idx = ['0','1'][1]
+gpu_idx = '0'
 picker = picker.CERP_Picker_Event(ckpt_dir, ckpt_step, gpu_idx=gpu_idx)
 
 

@@ -11,15 +11,15 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # i/o paths
-out_path = '/data3/bigdata/zhouyj/RC_train/rc_scsn_win-20s_freq-2-40hz.zarr'
-pos_root = '/data3/bigdata/zhouyj/RC_train/pos-scsn_win-20s_freq-2-40hz'
-neg_root = '/data3/bigdata/zhouyj/RC_train/neg-scsn_win-20s_freq-2-40hz_1'
+out_path = 'output/example.zarr'
+pos_root = 'output/pos-example'
+neg_root = 'output/neg-example'
 train_pos = os.path.join(pos_root,'train_pos.npy')
 valid_pos = os.path.join(pos_root,'valid_pos.npy')
 train_neg = os.path.join(neg_root,'train_neg.npy')
 valid_neg = os.path.join(neg_root,'valid_neg.npy')
 cdrp_prep_dir = '/home/zhouyj/software/CDRP_Pytorch/preprocess'
-shutil.copyfile('config_rc.py', os.path.join(cdrp_prep_dir, 'config.py'))
+shutil.copyfile('config_example.py', os.path.join(cdrp_prep_dir, 'config.py'))
 from dataset_sac import Events, Sequences
 num_workers = 10
 chunk_size = 1

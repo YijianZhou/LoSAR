@@ -23,10 +23,8 @@ fout_valid_paths = os.path.join(out_root,'valid_pos.npy')
 # cut params
 num_workers = 10
 samp_rate = 100
-win_len = [20,40][1]
+win_len = 20
 rand_dt = win_len / 2 # rand before P
-read_fpha = read_fpha
-get_data_dict = get_data_dict
 train_ratio, valid_ratio = 0.9, 0.1
 freq_band = [[2,40],[1,40]][1]
 to_filter = [True, False][0]

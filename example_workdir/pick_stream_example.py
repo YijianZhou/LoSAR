@@ -22,10 +22,10 @@ out_root = 'output/example'
 if not os.path.exists(out_root): os.makedirs(out_root)
 cnn_ckpt_dir = 'output/DetNet'
 rnn_ckpt_dir = 'output/PpkNet'
-cnn_ckpt_step = None
+cnn_ckpt_step = None # latest step
 rnn_ckpt_step = None
 # picking params
-gpu_idx =['0','1'][1]
+gpu_idx = '0'
 num_workers = 5
 shutil.copyfile('config_example.py', os.path.join(cdrp_dir, 'config.py'))
 import picker_stream as picker
