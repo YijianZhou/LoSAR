@@ -14,22 +14,22 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # i/o paths
-cdrp_dir = '/home/zhouyj/software/CERP_Pytorch'
+cerp_dir = '/home/zhouyj/software/CERP_Pytorch'
 fsta = 'input/example.sta'
 data_root = '/data/Example_Data'
-time_range = '20190704-20190725'
+time_range = '20190704-20190715'
 out_root = 'output/example'
 if not os.path.exists(out_root): os.makedirs(out_root)
-cnn_ckpt_dir = 'output/DetNet'
-rnn_ckpt_dir = 'output/PpkNet'
+cnn_ckpt_dir = 'output/example_ckpt/EventNet'
+rnn_ckpt_dir = 'output/example_ckpt/PhaseNet'
 cnn_ckpt_step = None # latest step
 rnn_ckpt_step = None
 # picking params
 gpu_idx = '0'
 num_workers = 5
-shutil.copyfile('config_example.py', os.path.join(cdrp_dir, 'config.py'))
+shutil.copyfile('config_example.py', os.path.join(cerp_dir, 'config.py'))
 import picker_stream as picker
-picker = picker.CDRP_Picker_Stream(cnn_ckpt_dir, rnn_ckpt_dir, cnn_ckpt_step, rnn_ckpt_step, gpu_idx)
+picker = picker.CERP_Picker_Stream(cnn_ckpt_dir, rnn_ckpt_dir, cnn_ckpt_step, rnn_ckpt_step, gpu_idx)
 get_data_dict = dp.get_data_dict
 get_sta_dict = dp.get_sta_dict
 sta_dict = get_sta_dict(fsta)
@@ -54,7 +54,7 @@ class Pick_One_Day(Dataset):
             st += read(data_paths[1])
             st += read(data_paths[2])
         except: continue
-        for i in range(3): st[i].data /= float(sta_dict[net_sta]['gain'])
+        for i in range(3): st[i].data = st[i].data / float(sta_dict[net_sta]['gain'])
         picker.pick(st, fout_pick, fout_det)
     fout_det.close()
     fout_pick.close()

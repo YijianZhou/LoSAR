@@ -4,7 +4,7 @@ import torch
 import numpy as np
 from scipy.stats import kurtosis
 import config
-from models import PpkNet
+from models import PhaseNet
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -39,7 +39,7 @@ class CERP_Picker_Event(object):
     ckpt_path = sorted(glob.glob(os.path.join(ckpt_dir, '%s_*.ckpt'%ckpt_step)))[0]
     # load model
     self.device = torch.device("cuda:%s"%gpu_idx)
-    self.model = PpkNet()
+    self.model = PhaseNet()
     self.model.load_state_dict(torch.load(ckpt_path, map_location=self.device))
     self.model.to(self.device)
     self.model.eval()

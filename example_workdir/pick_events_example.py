@@ -18,7 +18,7 @@ import picker_event as picker
 data_root = '/data/Example_events'
 samples = np.load(os.path.join(data_root, 'data_paths.npy'))
 fout = open('output/example.picks','w')
-ckpt_dir = 'output/PpkNet_example'
+ckpt_dir = 'output/example'
 ckpt_step = None # latest step
 # picking params
 win_len = 20

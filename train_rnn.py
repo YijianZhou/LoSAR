@@ -1,4 +1,4 @@
-""" Training PpkNet (RNN)
+""" Training RNN PhaseNet
 """
 import os, time
 import argparse
@@ -8,7 +8,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, RandomSampler, BatchSampler
 import torch.multiprocessing as mp
 from dataset import Sequences
-from models import PpkNet
+from models import PhaseNet
 import config
 from tensorboardX import SummaryWriter
 import warnings
@@ -41,7 +41,7 @@ def main():
   num_batch = len(train_loader)
 
   # import model
-  model = PpkNet()
+  model = PhaseNet()
   if to_init: model.apply(init_weights)
   device = torch.device("cuda")
   model.to(device)
@@ -132,8 +132,7 @@ if __name__ == '__main__':
   parser.add_argument('--gpu_idx', type=str, default="0")
   parser.add_argument('--zarr_path', type=str)
   parser.add_argument('--ckpt_dir', type=str,
-    default='output/example_ckpt/PpkNet')
-  parser.add_argument('--resume', default=False)
+    default='output/example_ckpt/PhaseNet')
   args = parser.parse_args()
   os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_idx
   main()

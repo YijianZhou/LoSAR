@@ -14,11 +14,11 @@ step_len = int(cfg.step_len * cfg.samp_rate)
 step_stride = int(cfg.step_stride * cfg.samp_rate)
 
 
-class DetNet(nn.Module):
-  """ CNN Detection Network
+class EventNet(nn.Module):
+  """ CNN for event detection
   """
   def __init__(self):
-    super(DetNet, self).__init__()
+    super(EventNet, self).__init__()
     # hyper-params
     self.in_channels = num_chn
     self.num_layers = cfg.num_cnn_layers
@@ -52,11 +52,11 @@ class DetNet(nn.Module):
 
 
 
-class PpkNet(nn.Module):
-  """ RNN Phase picking Network
+class PhaseNet(nn.Module):
+  """ RNN for phase picking
   """
   def __init__(self):
-    super(PpkNet, self).__init__()
+    super(PhaseNet, self).__init__()
     # hyper-params
     self.input_size = int(step_len * num_chn)
     self.hidden_size = cfg.rnn_hidden_size

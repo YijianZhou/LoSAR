@@ -6,6 +6,7 @@ class Config(object):
     # data preprocessing
     self.samp_rate = 100
     self.win_len = 20 # sec
+    self.win_stride = 6 # sec
     self.num_chn = 3
     self.step_len = 0.8 # in sec
     self.step_stride = 0.2
@@ -18,7 +19,7 @@ class Config(object):
     self.kernel_size = 3
     # cnn train
     self.to_init_cnn = False
-    self.cnn_num_epochs = 20
+    self.cnn_num_epochs = 10
     self.cnn_batch_size = 128
     self.cnn_lr = 1e-4
     self.cnn_ckpt_step = 25
@@ -29,7 +30,7 @@ class Config(object):
     self.num_rnn_layers = 2
     # rnn train
     self.to_init_rnn = False
-    self.rnn_num_epochs = 30
+    self.rnn_num_epochs = 10
     self.rnn_batch_size = 128
     self.rnn_lr = 1e-4
     self.rnn_ckpt_step = 25

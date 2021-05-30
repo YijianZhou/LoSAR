@@ -1,7 +1,6 @@
 """ Make Zarr format dataset with SAC files
 """
 import os, shutil, glob, sys
-sys.path.append('/home/zhouyj/software/CERP_Pytorch/preprocess')
 import zarr
 import torch.multiprocessing as mp
 import numpy as np
@@ -20,6 +19,7 @@ train_neg = os.path.join(neg_root,'train_neg.npy')
 valid_neg = os.path.join(neg_root,'valid_neg.npy')
 cerp_prep_dir = '/home/zhouyj/software/CERP_Pytorch/preprocess'
 shutil.copyfile('config_example.py', os.path.join(cerp_prep_dir, 'config.py'))
+sys.path.append(cerp_prep_dir)
 from dataset_sac import Events, Sequences
 num_workers = 10
 chunk_size = 1

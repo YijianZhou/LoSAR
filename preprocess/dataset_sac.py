@@ -82,6 +82,7 @@ def get_seq_target(tp, ts):
     idx_p = 0 if tp<step_len else int((tp-step_len)/step_stride) + 1
     idx_s = int((ts-step_len)/step_stride) + 1 
     if idx_s>num_steps: idx_s = num_steps
+    if idx_s<=idx_p: idx_s = idx_p+1
     # target: Noise, P and S 
     target_n = np.zeros(idx_p, dtype=np.int_)
     target_p = np.ones(idx_s-idx_p, dtype=np.int_)
