@@ -18,8 +18,8 @@ train_pos = os.path.join(pos_root,'train_pos.npy')
 valid_pos = os.path.join(pos_root,'valid_pos.npy')
 train_neg = os.path.join(neg_root,'train_neg.npy')
 valid_neg = os.path.join(neg_root,'valid_neg.npy')
-cdrp_prep_dir = '/home/zhouyj/software/CDRP_Pytorch/preprocess'
-shutil.copyfile('config_example.py', os.path.join(cdrp_prep_dir, 'config.py'))
+cerp_prep_dir = '/home/zhouyj/software/CERP_Pytorch/preprocess'
+shutil.copyfile('config_example.py', os.path.join(cerp_prep_dir, 'config.py'))
 from dataset_sac import Events, Sequences
 num_workers = 10
 chunk_size = 1
