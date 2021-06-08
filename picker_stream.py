@@ -36,6 +36,7 @@ win_kurt_npts = [int(win*samp_rate) for win in cfg.win_kurt]
 win_sta_npts = [int(win*samp_rate) for win in cfg.win_sta]
 win_lta_npts = [int(win*samp_rate) for win in cfg.win_lta]
 amp_win = cfg.amp_win
+amp_win_npts = int(sum(amp_win)*samp_rate)
 
 
 class CERP_Picker_Stream(object):
@@ -110,8 +111,7 @@ class CERP_Picker_Stream(object):
             tp, ts = [start_time + t_sec for t_sec in [tp_sec, ts_sec]]
         # get s_amp
         st = stream.slice(tp-amp_win[0], ts+amp_win[1]).copy()
-        if len(st)!=num_chn or ts+amp_win[1]>end_time: continue
-        amp_data = np.array([tr.data for tr in st])
+        amp_data = np.array([tr.data[0:amp_win_npts] for tr in st])
         s_amp = self.get_amp(amp_data)
         picks.append([net_sta, tp, ts, s_amp, det_prob[i]])
         if fout_pick:
