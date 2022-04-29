@@ -7,7 +7,6 @@ import config
 
 # set hyper-params
 cfg = config.Config()
-# data info
 num_chn = cfg.num_chn
 win_len = int(cfg.win_len * cfg.samp_rate)
 step_len = int(cfg.step_len * cfg.samp_rate)
@@ -49,7 +48,6 @@ class EventNet(nn.Module):
                    nn.ReLU(inplace=True), 
                    nn.MaxPool1d(2)]
     return nn.Sequential(*layers)
-
 
 
 class PhaseNet(nn.Module):

@@ -1,0 +1,13 @@
+""" Make Zarr format dataset with SAC files
+"""
+import os, shutil
+
+# i/o paths
+out_path = '/data/bigdata/eg_train-samples.zarr'
+sac_root = '/data/bigdata/eg_train-samples_sac'
+cerp_prep_dir = '/home/zhouyj/software/CERP_Pytorch/preprocess'
+shutil.copyfile('config_eg.py', os.path.join(cerp_prep_dir, 'config.py'))
+
+# sac2zarr
+os.system("python {}/sac2zarr.py --out_path={} --sac_root={}"\
+    .format(cerp_prep_dir, out_path, sac_root))

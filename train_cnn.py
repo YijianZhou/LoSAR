@@ -36,13 +36,11 @@ def main():
   valid_sampler = BatchSampler(RandomSampler(valid_set, replacement=True), batch_size=batch_size, drop_last=False)
   valid_loader = DataLoader(valid_set, batch_sampler=valid_sampler, pin_memory=True)
   num_batch = len(train_loader)
-
   # import model
   model = EventNet()
   if to_init: model.apply(init_weights)
   device = torch.device("cuda")
   model.to(device)
-#  model = nn.DataParallel(model.cuda(), device_ids=gpus, output_device=gpus[0])
   # loss & optim
   criterion = nn.CrossEntropyLoss()
   optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -79,7 +77,6 @@ def main():
             writer.add_scalars('loss', sum_loss, global_step)
             writer.add_scalars('neg_acc', sum_acc_neg, global_step)
             writer.add_scalars('pos_acc', sum_acc_pos, global_step)
-
 
 
 # train one batch

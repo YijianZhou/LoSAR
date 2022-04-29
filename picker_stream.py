@@ -42,13 +42,13 @@ amp_win_npts = int(sum(amp_win)*samp_rate)
 class CERP_Picker_Stream(object):
   """ CERP picker for raw stream data
   """
-  def __init__(self, cnn_ckpt_dir, rnn_ckpt_dir, cnn_ckpt_step=None, rnn_ckpt_step=None, gpu_idx='0'):
-    if not cnn_ckpt_step:
-        cnn_ckpt_step = max([int(os.path.basename(ckpt).split('_')[0]) for ckpt in glob.glob(os.path.join(cnn_ckpt_dir, '*.ckpt'))])
-    if not rnn_ckpt_step:
-        rnn_ckpt_step = max([int(os.path.basename(ckpt).split('_')[0]) for ckpt in glob.glob(os.path.join(rnn_ckpt_dir, '*.ckpt'))])
-    cnn_ckpt = sorted(glob.glob(os.path.join(cnn_ckpt_dir, '%s_*.ckpt'%cnn_ckpt_step)))[0]
-    rnn_ckpt = sorted(glob.glob(os.path.join(rnn_ckpt_dir, '%s_*.ckpt'%rnn_ckpt_step)))[0]
+  def __init__(self, ckpt_dir, cnn_ckpt=-1, rnn_ckpt=-1, gpu_idx='0'):
+    if cnn_ckpt=='-1':
+        cnn_ckpt = max([int(os.path.basename(ckpt).split('_')[0]) for ckpt in glob.glob(os.path.join(ckpt_dir, 'EventNet', '*.ckpt'))])
+    if rnn_ckpt=='-1':
+        rnn_ckpt = max([int(os.path.basename(ckpt).split('_')[0]) for ckpt in glob.glob(os.path.join(ckpt_dir, 'PhaseNet', '*.ckpt'))])
+    cnn_ckpt = sorted(glob.glob(os.path.join(ckpt_dir, 'EventNet', '%s_*.ckpt'%cnn_ckpt)))[0]
+    rnn_ckpt = sorted(glob.glob(os.path.join(ckpt_dir, 'PhaseNet', '%s_*.ckpt'%rnn_ckpt)))[0]
     print('CNN checkpoint: %s'%cnn_ckpt)
     print('RNN checkpoint: %s'%rnn_ckpt)
     # load model
@@ -63,7 +63,7 @@ class CERP_Picker_Stream(object):
     self.model_rnn.eval()
 
 
-  def pick(self, stream, fout_pick=None, fout_det=None):
+  def pick(self, stream, fout=None):
     # 1. preprocess stream data & sliding win
     print('1. preprocess stream data & slice into windows')
     t = time.time()
@@ -114,10 +114,8 @@ class CERP_Picker_Stream(object):
         amp_data = np.array([tr.data[0:amp_win_npts] for tr in st])
         s_amp = self.get_amp(amp_data)
         picks.append([net_sta, tp, ts, s_amp, det_prob[i]])
-        if fout_pick:
-            fout_pick.write('{},{},{},{},{:.4f}\n'.format(net_sta, tp, ts, s_amp, det_prob[i]))
-        if fout_det:
-            fout_det.write('{},{},{},{:.4f}\n'.format(net_sta, win_t0, win_t0+win_len, det_prob[i]))
+        if fout:
+            fout.write('{},{},{},{},{:.4f}\n'.format(net_sta, tp, ts, s_amp, det_prob[i]))
     print('total run time {:.2f}s'.format(time.time()-t))
     return picks
 

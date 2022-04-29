@@ -45,7 +45,6 @@ def main():
   if to_init: model.apply(init_weights)
   device = torch.device("cuda")
   model.to(device)
-#  model = nn.DataParallel(model.cuda(), device_ids=gpus, output_device=gpus[0])
   # loss & optim
   criterion = nn.CrossEntropyLoss()
   optimizer = optim.Adam(model.parameters(), lr=lr)
