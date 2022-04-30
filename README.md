@@ -2,23 +2,23 @@
 **C**NN-**E**vent detector & **R**NN-**P**hase picker (CERP), implemented in Pytorch <br>
 
 ## Usage  <br>
-**1. Training CERP model** <br>
-1.1 run [PAL](https://github.com/YijianZhou/PAL) to generate local training samples <br>
-1.2 cut event windows & generate Zarr database <br>
+### 1. Training CERP model <br>
+**1.1 run [PAL](https://github.com/YijianZhou/PAL) to generate local training samples**  <br>
+**1.2 cut event windows & generate Zarr database** <br>
 ```bash
 python cut_train-samples.py
 python sac2zarr.py
 ```  
-1.3 train CERP model  
+**1.3 train CERP model  **
 ```bash
 python train.py
 ```
-**2. Apply CERP on continuous data & associate picks** <br>
-2.1 run CERP
+### 2. Apply CERP on continuous data & associate picks <br>
+**2.1 run CERP**
 ```bash
 python pick_stream.py
 ```  
-2.2 associate picks with PAL associator
+**2.2 associate picks with PAL associator**
 ```bash
 python parallel_assoc.py
 ```  
