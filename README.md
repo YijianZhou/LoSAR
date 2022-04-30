@@ -1,7 +1,7 @@
 # CERP_Pytorch
-**C**NN-**E**vent detector & **R**NN-**P**hase picker (CERP), implemented in Pytorch 
+**C**NN-**E**vent detector & **R**NN-**P**hase picker (CERP), implemented in Pytorch <br>
 
-##Usage <br>
+##Usage  
 **1. Training CERP model** <br>
 1.1 run [PAL](https://github.com/YijianZhou/PAL) to generate local training samples <br>
 1.2 cut event windows & generate Zarr database <br>
