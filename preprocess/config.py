@@ -1,5 +1,5 @@
 import sys
-sys.path.append('/home/zhouyj/software/CERP_new/preprocess')
+sys.path.append('/home/zhouyj/software/CERP_Pytorch/preprocess')
 import reader
 
 class Config(object):
@@ -9,6 +9,7 @@ class Config(object):
 
     # data prep & training sample cut
     self.samp_rate = 100
+    self.num_workers = 10 # for event cutting
     self.win_len = 12 # sec
     self.win_stride = 4 # RNN step stride, sec
     self.num_chn = 3
@@ -17,22 +18,23 @@ class Config(object):
     self.num_steps = int((self.win_len - self.step_len) / self.step_stride) + 1
     self.freq_band = [2,20]
     self.global_max_norm = True
-    self.num_workers = 10 # for event cutting
-    self.read_fpha = reader.read_fpha
-    self.get_data_dict = reader.get_rc_data
     self.to_prep = True
     self.train_ratio = 0.9
     self.valid_ratio = 0.1 # ratio of samples to cut for training
     self.num_aug = 2 # whether data augment
     self.max_noise = 0.2 # n time P std
     self.neg_ref = ['P','S'][0] # start time for negative window
+    self.read_fpha = reader.read_fpha # import readers
+    self.get_data_dict = reader.get_rc_data
+    self.get_sta_dict = reader.get_sta_dict
+    self.read_data = reader.read_rc_data
     # cnn model
     self.num_cnn_layers = 8
     self.num_cnn_kernels = 32
     self.kernel_size = 3
     # cnn train
     self.to_init_cnn = False
-    self.cnn_num_epochs = 10
+    self.cnn_num_epochs = 8
     self.cnn_batch_size = 128
     self.cnn_lr = 1e-4
     self.cnn_ckpt_step = 25
