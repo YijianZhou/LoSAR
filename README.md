@@ -5,24 +5,24 @@
 **1. Training CERP model** <br>
     1.1 run [PAL](https://github.com/YijianZhou/PAL) to generate local training samples <br>
     1.2 cut event windows & generate Zarr database <br>
-```
+```python
 python cut_train-samples.py
 python sac2zarr.py
 ```
 
-    1.3 train CERP model <br>
-```
+    1.3 train CERP model
+```python
 python train.py
 ```
 
 **2. Apply CERP on continuous data & associate picks** <br>
-    2.1 run CERP <br>
-```
+    2.1 run CERP
+```python
 python pick_stream.py
 ```
 
-    2.2 associate picks with PAL associator <br>
-```
+    2.2 associate picks with PAL associator
+```python
 python parallel_assoc.py
 ```
 <br>
