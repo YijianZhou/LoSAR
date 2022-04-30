@@ -4,12 +4,12 @@
 ## Usage  <br>
 ### 1. Training CERP model <br>
 **1.1 run [PAL](https://github.com/YijianZhou/PAL) to generate local training samples**  <br>
-**1.2 cut event windows & generate Zarr database** <br>
+**1.2 cut event windows & generate Zarr database**  <br>
 ```bash
 python cut_train-samples.py
 python sac2zarr.py
 ```  
-**1.3 train CERP model  **
+**1.3 train CERP model**  <br>
 ```bash
 python train.py
 ```
