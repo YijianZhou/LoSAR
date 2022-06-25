@@ -17,7 +17,8 @@ cfg = config.Config()
 num_workers = cfg.num_workers
 samp_rate = cfg.samp_rate
 win_len = cfg.win_len
-rand_dt = win_len/2 # rand before P
+rand_dt = win_len/2  # rand after P or S
+neg_ref = cfg.neg_ref
 read_fpha = cfg.read_fpha
 get_data_dict = cfg.get_data_dict
 train_ratio = cfg.train_ratio
@@ -26,7 +27,6 @@ freq_band = cfg.freq_band
 to_prep = cfg.to_prep
 global_max_norm = cfg.global_max_norm
 num_aug = cfg.num_aug
-neg_ref = cfg.neg_ref
 data_format = cfg.data_format
 
 def get_sta_date(event_list):
