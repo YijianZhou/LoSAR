@@ -25,9 +25,9 @@ class Config(object):
     self.max_noise = 0.2 # n time P std
     self.neg_ref = ['P','S'][0] # start time for negative window
     self.read_fpha = reader.read_fpha # import readers
-    self.get_data_dict = reader.get_rc_data
+    self.get_data_dict = reader.get_data_dict
     self.get_sta_dict = reader.get_sta_dict
-    self.read_data = reader.read_rc_data
+    self.read_data = reader.read_data
     # cnn model
     self.num_cnn_layers = 8
     self.num_cnn_kernels = 32
