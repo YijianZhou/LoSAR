@@ -27,7 +27,7 @@ to_prep = cfg.to_prep
 global_max_norm = cfg.global_max_norm
 num_aug = cfg.num_aug
 neg_ref = cfg.neg_ref
-
+data_format = cfg.data_format
 
 def get_sta_date(event_list):
     sta_date_dict = {}
@@ -97,14 +97,17 @@ class Negative(Dataset):
             is_ts = (picks['ts']>max(ts, start_time)) * (picks['ts']<end_time)
             if sum(is_tp*is_ts)>0: continue
             # slice & prep
-            st = obspy_slice(stream, start_time, end_time)
+            if data_format=='sac': st = obspy_slice(stream, start_time, end_time)
+            else: st = stream.slice(start_time, end_time)
             if 0 in st.max() or len(st)!=3: continue
             st = st.detrend('demean').normalize(global_max=global_max_norm) # note: no detrend here
             # write & record out_paths
             if samp_class=='train': train_paths_i.append([])
             if samp_class=='valid': valid_paths_i.append([])
-            for tr in st:
-                out_path = os.path.join(out_dir,'%s.%s.%s'%(aug_idx,samp_name,tr.stats.channel))
+            for ii,tr in enumerate(st):
+                out_path = os.path.join(out_dir,'%s.%s.%s'%(aug_idx,samp_name,ii+1))
+                tr.write(out_path, format='sac')
+                tr = read(out_path, headonly=True)[0]
                 tr.stats.sac.t1 = ts-start_time
                 tr.write(out_path, format='sac')
                 if samp_class=='train': train_paths_i[-1].append(out_path)
