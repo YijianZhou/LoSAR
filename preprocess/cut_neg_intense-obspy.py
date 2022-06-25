@@ -1,4 +1,8 @@
-""" Cut negative samples (include preprocess)
+""" Cut negative samples with Obspy
+    This method is designed for intense sequence (many events in one day):
+    1. collect picks for certain sta-day pairs, for loop
+    2. preprocess sta-day data
+    3. cut all picks in that sta-day
 """
 import os, glob, shutil
 import argparse
