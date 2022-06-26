@@ -1,23 +1,21 @@
 """ Signal processing library
 """
 import numpy as np
-from obspy import UTCDateTime
+from obspy import read, UTCDateTime
 
 def preprocess(stream, samp_rate, freq_band):
     # time alignment
     start_time = max([trace.stats.starttime for trace in stream])
     end_time = min([trace.stats.endtime for trace in stream])
-    if start_time>end_time: print('bad data!'); return []
+    if start_time>=end_time: print('bad data!'); return []
     st = stream.slice(start_time, end_time)
     # resample data
     samp_rate = int(samp_rate)
     org_rate = int(st[0].stats.sampling_rate)
-    rate = np.gcd(org_rate, samp_rate)
-    if rate==1: print('warning: bad sampling rate!'); return []
-    decim_factor = int(org_rate / rate)
-    resamp_factor = int(samp_rate / rate)
-    if decim_factor!=1: st = st.decimate(decim_factor)
-    if resamp_factor!=1: st = st.interpolate(samp_rate)
+    if org_rate!=samp_rate: st = st.interpolate(samp_rate)
+    for ii in range(3):
+        st[ii].data[np.isnan(st[ii].data)] = 0
+        st[ii].data[np.isinf(st[ii].data)] = 0
     # filter
     st = st.detrend('demean').detrend('linear').taper(max_percentage=0.05, max_length=10.)
     freq_min, freq_max = freq_band
@@ -30,9 +28,9 @@ def preprocess(stream, samp_rate, freq_band):
     else:
         print('filter type not supported!'); return []
 
-def obspy_slice(stream, t0, t1):
-    st = stream.slice(t0, t1)
+def sac_ch_time(st):
     for tr in st:
+        t0 = tr.stats.starttime
         tr.stats.sac.nzyear = t0.year
         tr.stats.sac.nzjday = t0.julday
         tr.stats.sac.nzhour = t0.hour
