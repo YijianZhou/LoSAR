@@ -10,7 +10,7 @@ import torch.multiprocessing as mp
 from torch.utils.data import Dataset, DataLoader
 from obspy import read, UTCDateTime
 from reader import dtime2str
-from signal_lib import preprocess, obspy_slice
+from signal_lib import preprocess, sac_ch_time
 import config
 import warnings
 warnings.filterwarnings("ignore")
@@ -98,22 +98,20 @@ class Positive(Dataset):
             # rand time shift & prep
             start_time = tp - np.random.rand(1)[0]*rand_dt
             end_time = start_time + win_len
-            if data_format=='sac': st = obspy_slice(stream, start_time, end_time)
-            else: st = stream.slice(start_time, end_time)
+            st = stream.slice(start_time, end_time)
+            if data_format=='sac': st = sac_ch_time(st)
             if 0 in st.max() or len(st)!=3: continue
             st = st.detrend('demean').normalize(global_max=global_max_norm) # note: no detrend here
-            # write & record out_paths
-            if samp_class=='train': train_paths_i.append([])
-            if samp_class=='valid': valid_paths_i.append([])
+            out_paths = [os.path.join(out_dir,'%s.%s.%s.sac'%(aug_idx,samp_name,ii+1)) for ii in range(3)]
             for ii,tr in enumerate(st):
                 if aug_idx>0 and max_noise>0: tr = add_noise(tr, tp, ts)
-                out_path = os.path.join(out_dir,'%s.%s.%s'%(aug_idx,samp_name,ii+1))
-                tr.write(out_path, format='sac')
-                tr = read(out_path, headonly=True)[0]
+                tr.write(out_paths[ii], format='sac')
+                tr = read(out_paths[ii])[0]
                 tr.stats.sac.t0, tr.stats.sac.t1 = tp-start_time, ts-start_time
-                tr.write(out_path, format='sac')
-                if samp_class=='train': train_paths_i[-1].append(out_path)
-                if samp_class=='valid': valid_paths_i[-1].append(out_path)
+                tr.write(out_paths[ii], format='sac')
+            # record out_paths
+            if samp_class=='train': train_paths_i.append(out_paths)
+            if samp_class=='valid': valid_paths_i.append(out_paths)
     return train_paths_i, valid_paths_i
 
   def __len__(self):
