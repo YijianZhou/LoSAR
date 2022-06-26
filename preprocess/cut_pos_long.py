@@ -121,6 +121,6 @@ if __name__ == '__main__':
     for i,[train_paths_i, valid_paths_i] in enumerate(dataloader):
         train_paths += train_paths_i
         valid_paths += valid_paths_i
-        if i%50==0: print('%s/%s events done/total'%(i+1,len(dataset)))
+        if i%50==0: print('%s/%s events done/total'%(i,len(dataset)))
     np.save(fout_train_paths, train_paths)
     np.save(fout_valid_paths, valid_paths)
