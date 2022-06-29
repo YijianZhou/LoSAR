@@ -62,7 +62,6 @@ class CERP_Picker_Stream(object):
     self.model_cnn.eval()
     self.model_rnn.eval()
 
-
   def pick(self, stream, fout=None):
     # 1. preprocess stream data & sliding win
     print('1. preprocess stream data & slice into windows')
@@ -101,6 +100,7 @@ class CERP_Picker_Stream(object):
     # 3.2 repick & get s_amp
     print('  repick & get s_amp')
     picks = []
+    tp_old, ts_old = -1, -1
     for i in range(num_det):
         if i in to_drop: continue
         win_idx = det_idx[i]
@@ -113,12 +113,15 @@ class CERP_Picker_Stream(object):
         st = stream.slice(tp-amp_win[0], ts+amp_win[1]).copy()
         amp_data = np.array([tr.data[0:amp_win_npts] for tr in st])
         s_amp = self.get_amp(amp_data)
-        picks.append([net_sta, tp, ts, s_amp, det_prob[i]])
-        if fout:
-            fout.write('{},{},{},{},{:.4f}\n'.format(net_sta, tp, ts, s_amp, det_prob[i]))
+        if tp_old!=-1 and (abs(tp-tp_old)<=tp_dev or abs(ts-ts_old)<=ts_dev): 
+            picks[-1] = [net_sta, tp, ts, s_amp, det_prob[i]]
+        else: picks.append([net_sta, tp, ts, s_amp, det_prob[i]])
+        tp_old, ts_old = tp, ts
+    if fout:
+        for net_sta, tp, ts, s_amp, det_prob_i in picks:
+            fout.write('{},{},{},{},{:.4f}\n'.format(net_sta, tp, ts, s_amp, det_prob_i))
     print('total run time {:.2f}s'.format(time.time()-t))
     return picks
-
 
   # 2.1 detect earthquake windows
   def run_cnn(self, st_data_cuda, num_win):
@@ -150,7 +153,6 @@ class CERP_Picker_Stream(object):
     print('  {} detections | CNN run time {:.2f}s'.format(len(det_idx), time.time()-t))
     return det_idx, det_prob
 
-
   # 2.2 pick tp & ts of earthquake window
   def run_rnn(self, st_data_cuda, det_idx):
     print('2.2 run RNN PhaseNet')
@@ -181,7 +183,6 @@ class CERP_Picker_Stream(object):
     print('  {} events picked | RNN run time {:.2f}s'.format(len(picks), time.time()-t))
     return np.array(picks)
 
-
   def st2seq(self, st_data_cuda, win_idx):
     num_win = len(win_idx)
     win_seq = torch.zeros((num_win, num_steps, num_chn, step_len_npts), dtype=torch.float32, device=self.device)
@@ -193,7 +194,6 @@ class CERP_Picker_Stream(object):
             idx1 = idx0 + step_len_npts
             win_seq[i,j,:] = win_data[:,idx0:idx1]
     return win_seq.view([num_win, num_steps, step_len_npts*num_chn])
- 
 
   def preprocess(self, st):
     # check num_chn
@@ -205,7 +205,6 @@ class CERP_Picker_Stream(object):
     st = st.slice(start_time, end_time, nearest_sample=True)
     # resample data
     org_rate = st[0].stats.sampling_rate
-    if org_rate!=samp_rate: st = st.interpolate(samp_rate)
     if org_rate!=samp_rate: st = st.interpolate(samp_rate)
     for ii in range(3):
         st[ii].data[np.isnan(st[ii].data)] = 0
@@ -222,7 +221,6 @@ class CERP_Picker_Stream(object):
     else:
         print('filter type not supported!'); return []
 
-
   # preprocess cuda data (in-place)
   def preprocess_cuda(self, data):
     data -= torch.mean(data, axis=1).view(num_chn,1)
@@ -230,14 +228,12 @@ class CERP_Picker_Stream(object):
     else: data /= torch.max(abs(data), axis=1).values.view(num_chn,1)
     return data
 
-
   # get S amplitide
   def get_amp(self, velo):
     velo -= np.reshape(np.mean(velo, axis=1), [velo.shape[0],1])
     disp = np.cumsum(velo, axis=1)
     disp /= samp_rate
     return np.amax(np.sum(disp**2, axis=0))**0.5
-
 
   def repick(self, st_data, tp0, ts0):
     # extract data
@@ -296,7 +292,6 @@ class CERP_Picker_Stream(object):
     ts = ts_idx / samp_rate
     return tp, ts
 
-
   # calc STA/LTA for a trace of data (abs or square)
   def calc_sta_lta(self, data, win_lta_npts, win_sta_npts):
     npts = len(data)
@@ -316,7 +311,6 @@ class CERP_Picker_Stream(object):
     sta_lta[np.isnan(sta_lta)] = 0.
     return sta_lta
 
-
   # calc kurtosis trace
   def calc_kurtosis(self, data, win_kurt_npts):
     npts = len(data) - win_kurt_npts + 1
@@ -325,16 +319,15 @@ class CERP_Picker_Stream(object):
         kurt[i] = kurtosis(data[i:i+win_kurt_npts])
     return kurt
 
-
   def find_first_peak(self, data):
     npts = len(data)
     if npts<2: return 0
     delta_d = data[1:npts] - data[0:npts-1]
+    delta_d[np.isnan(delta_d)] = 0
     if min(delta_d)>=0 or max(delta_d)<=0: return 0
     neg_idx = np.where(delta_d<0)[0]
     pos_idx = np.where(delta_d>=0)[0]
     return max(neg_idx[0], pos_idx[0])
-
 
   def find_second_peak(self, data):
     npts = len(data)
