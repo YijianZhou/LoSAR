@@ -18,7 +18,7 @@ def main():
   # set defaults
   torch.backends.cudnn.benchmark = True
   # i/o paths
-  ckpt_dir = args.ckpt_dir
+  ckpt_dir = os.path.join(args.ckpt_dir,'RNN')
   if not os.path.exists(ckpt_dir): os.makedirs(ckpt_dir)
   # training params
   cfg = config.Config()
@@ -32,10 +32,9 @@ def main():
   step_stride = cfg.step_stride
   # set data loader
   batch_size = cfg.rnn_batch_size
-  num_workers = cfg.rnn_num_workers
   train_set = Sequences(args.zarr_path, 'train')
   valid_set = Sequences(args.zarr_path, 'valid')
-  train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True)
+  train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True)
   valid_sampler = BatchSampler(RandomSampler(valid_set, replacement=True), batch_size=batch_size, drop_last=False)
   valid_loader = DataLoader(valid_set, batch_sampler=valid_sampler, pin_memory=True)
   num_batch = len(train_loader)
@@ -129,9 +128,9 @@ if __name__ == '__main__':
   mp.set_start_method('spawn', force=True) # 'spawn' or 'forkserver'
   parser = argparse.ArgumentParser()
   parser.add_argument('--gpu_idx', type=str, default="0")
+  parser.add_argument('--num_workers', type=int)
   parser.add_argument('--zarr_path', type=str)
-  parser.add_argument('--ckpt_dir', type=str,
-    default='output/example_ckpt/PhaseNet')
+  parser.add_argument('--ckpt_dir', type=str, default='output/eg_ckpt')
   args = parser.parse_args()
   os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_idx
   main()
