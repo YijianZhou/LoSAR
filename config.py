@@ -9,7 +9,6 @@ class Config(object):
 
     # data prep & training sample cut
     self.samp_rate = 100
-    self.num_workers = 10 # for event cutting
     self.win_len = 12 # sec
     self.win_stride = 4 # RNN step stride, sec
     self.num_chn = 3
@@ -40,7 +39,6 @@ class Config(object):
     self.cnn_lr = 1e-4
     self.cnn_ckpt_step = 25
     self.cnn_summary_step = 10
-    self.cnn_num_workers = 10 
     # rnn model
     self.rnn_hidden_size = 32
     self.num_rnn_layers = 2
@@ -51,7 +49,6 @@ class Config(object):
     self.rnn_lr = 1e-4
     self.rnn_ckpt_step = 25
     self.rnn_summary_step = 10
-    self.rnn_num_workers = 10 
     # PAL picker
     self.picker_batch_size = 100
     self.tp_dev = 2. # whether same pick in different sliding windows
