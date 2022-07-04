@@ -19,7 +19,6 @@ num_steps = cfg.num_steps
 win_len = int(cfg.win_len * samp_rate)
 step_len = int(cfg.step_len * samp_rate)
 step_stride = int(cfg.step_stride * samp_rate)
-num_workers = cfg.num_workers
 
 def write_sequence(zarr_dset, data_loader):
     num_samples = len(data_loader)
@@ -53,6 +52,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--out_path', type=str)
     parser.add_argument('--sac_root', type=str)
+    parser.add_argument('--num_workers', type=int)
     args = parser.parse_args()
     # i/o paths
     out_path = args.out_path
@@ -67,12 +67,12 @@ if __name__ == '__main__':
     valid_neg_set = Events(valid_neg)
     train_seq_set = Sequences(train_pos)
     valid_seq_set = Sequences(valid_pos)
-    train_pos_loader = DataLoader(train_pos_set, batch_size=None, shuffle=False, num_workers=num_workers)
-    valid_pos_loader = DataLoader(valid_pos_set, batch_size=None, shuffle=False, num_workers=num_workers)
-    train_neg_loader = DataLoader(train_neg_set, batch_size=None, shuffle=False, num_workers=num_workers)
-    valid_neg_loader = DataLoader(valid_neg_set, batch_size=None, shuffle=False, num_workers=num_workers)
-    train_seq_loader = DataLoader(train_seq_set, batch_size=None, shuffle=False, num_workers=num_workers)
-    valid_seq_loader = DataLoader(valid_seq_set, batch_size=None, shuffle=False, num_workers=num_workers)
+    train_pos_loader = DataLoader(train_pos_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
+    valid_pos_loader = DataLoader(valid_pos_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
+    train_neg_loader = DataLoader(train_neg_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
+    valid_neg_loader = DataLoader(valid_neg_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
+    train_seq_loader = DataLoader(train_seq_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
+    valid_seq_loader = DataLoader(valid_seq_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
     # start writing
     write_event('train/positive', train_pos_loader)
     write_event('valid/positive', valid_pos_loader)
