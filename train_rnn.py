@@ -8,7 +8,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, RandomSampler, BatchSampler
 import torch.multiprocessing as mp
 from dataset import Sequences
-from models import PhaseNet
+from models import RNN
 import config
 from tensorboardX import SummaryWriter
 import warnings
@@ -40,7 +40,7 @@ def main():
   num_batch = len(train_loader)
 
   # import model
-  model = PhaseNet()
+  model = RNN()
   if to_init: model.apply(init_weights)
   device = torch.device("cuda")
   model.to(device)

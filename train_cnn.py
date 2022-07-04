@@ -8,7 +8,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, RandomSampler, BatchSampler
 import torch.multiprocessing as mp
 from dataset import Events
-from models import EventNet
+from models import CNN
 import config
 from tensorboardX import SummaryWriter
 import warnings
@@ -36,7 +36,7 @@ def main():
   valid_loader = DataLoader(valid_set, batch_sampler=valid_sampler, pin_memory=True)
   num_batch = len(train_loader)
   # import model
-  model = EventNet()
+  model = CNN()
   if to_init: model.apply(init_weights)
   device = torch.device("cuda")
   model.to(device)
