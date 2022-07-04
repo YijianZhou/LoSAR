@@ -8,7 +8,7 @@ cerp_prep_dir = '/home/zhouyj/software/CERP_Pytorch/preprocess'
 shutil.copyfile('config_eg.py', os.path.join(cerp_prep_dir, 'config.py'))
 fpha = 'input/example.pha'
 out_root = '/data/bigdata/eg_train-samples_sac'
-cut_method = 'obspy'
+cut_method = 'intense'
 
 # cut pos & neg
 os.system("python {}/cut_pos_{}.py --data_dir={} --fpha={} --out_root={} "\
