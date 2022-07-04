@@ -17,7 +17,6 @@ warnings.filterwarnings("ignore")
 
 # cut params
 cfg = config.Config()
-num_workers = cfg.num_workers
 samp_rate = cfg.samp_rate
 win_len = cfg.win_len
 rand_dt = win_len/2 # rand before P
@@ -124,6 +123,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_dir', type=str)
     parser.add_argument('--fpha', type=str)
     parser.add_argument('--out_root', type=str)
+    parser.add_argument('--num_workers', type=int)
     args = parser.parse_args()
     # i/o paths
     train_root = os.path.join(args.out_root,'train')
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     # for sta-date pairs
     train_paths, valid_paths = [], []
     dataset = Positive(sta_date_items, args.data_dir, args.out_root)
-    dataloader = DataLoader(dataset, num_workers=num_workers, batch_size=None)
+    dataloader = DataLoader(dataset, num_workers=args.num_workers, batch_size=None)
     for i,[train_paths_i, valid_paths_i] in enumerate(dataloader): 
         train_paths += train_paths_i
         valid_paths += valid_paths_i
