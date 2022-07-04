@@ -1,4 +1,4 @@
-""" Training CNN EventNet
+""" Training CNN for Event detection
 """
 import os, time
 import argparse

@@ -13,11 +13,11 @@ step_len = int(cfg.step_len * cfg.samp_rate)
 step_stride = int(cfg.step_stride * cfg.samp_rate)
 
 
-class EventNet(nn.Module):
-  """ CNN for event detection
+class CNN(nn.Module):
+  """ CNN for Event detection
   """
   def __init__(self):
-    super(EventNet, self).__init__()
+    super(CNN, self).__init__()
     # hyper-params
     self.in_channels = num_chn
     self.num_layers = cfg.num_cnn_layers
@@ -50,11 +50,11 @@ class EventNet(nn.Module):
     return nn.Sequential(*layers)
 
 
-class PhaseNet(nn.Module):
-  """ RNN for phase picking
+class RNN(nn.Module):
+  """ RNN for Phase picking
   """
   def __init__(self):
-    super(PhaseNet, self).__init__()
+    super(RNN, self).__init__()
     # hyper-params
     self.input_size = int(step_len * num_chn)
     self.hidden_size = cfg.rnn_hidden_size

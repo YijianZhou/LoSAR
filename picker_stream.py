@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import numpy as np
 from scipy.stats import kurtosis
 import config
-from models import EventNet, PhaseNet
+from models import CNN, RNN
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -44,17 +44,17 @@ class CERP_Picker_Stream(object):
   """
   def __init__(self, ckpt_dir, cnn_ckpt=-1, rnn_ckpt=-1, gpu_idx='0'):
     if cnn_ckpt=='-1':
-        cnn_ckpt = max([int(os.path.basename(ckpt).split('_')[0]) for ckpt in glob.glob(os.path.join(ckpt_dir, 'EventNet', '*.ckpt'))])
+        cnn_ckpt = max([int(os.path.basename(ckpt).split('_')[0]) for ckpt in glob.glob(os.path.join(ckpt_dir, 'CNN', '*.ckpt'))])
     if rnn_ckpt=='-1':
-        rnn_ckpt = max([int(os.path.basename(ckpt).split('_')[0]) for ckpt in glob.glob(os.path.join(ckpt_dir, 'PhaseNet', '*.ckpt'))])
-    cnn_ckpt = sorted(glob.glob(os.path.join(ckpt_dir, 'EventNet', '%s_*.ckpt'%cnn_ckpt)))[0]
-    rnn_ckpt = sorted(glob.glob(os.path.join(ckpt_dir, 'PhaseNet', '%s_*.ckpt'%rnn_ckpt)))[0]
+        rnn_ckpt = max([int(os.path.basename(ckpt).split('_')[0]) for ckpt in glob.glob(os.path.join(ckpt_dir, 'RNN', '*.ckpt'))])
+    cnn_ckpt = sorted(glob.glob(os.path.join(ckpt_dir, 'CNN', '%s_*.ckpt'%cnn_ckpt)))[0]
+    rnn_ckpt = sorted(glob.glob(os.path.join(ckpt_dir, 'RNN', '%s_*.ckpt'%rnn_ckpt)))[0]
     print('CNN checkpoint: %s'%cnn_ckpt)
     print('RNN checkpoint: %s'%rnn_ckpt)
     # load model
     self.device = torch.device("cuda:%s"%gpu_idx)
-    self.model_cnn = EventNet()
-    self.model_rnn = PhaseNet()
+    self.model_cnn = CNN()
+    self.model_rnn = RNN()
     self.model_cnn.load_state_dict(torch.load(cnn_ckpt, map_location=self.device))
     self.model_rnn.load_state_dict(torch.load(rnn_ckpt, map_location=self.device))
     self.model_cnn.to(self.device)
@@ -76,7 +76,7 @@ class CERP_Picker_Stream(object):
     st_len_npts = min([len(trace) for trace in stream])
     st_data = np.array([trace.data[0:st_len_npts] for trace in stream], dtype=np.float32)
     st_data_cuda = torch.from_numpy(st_data).cuda(device=self.device)
-    # 2. run EventNet & PhasekNet
+    # 2. run CERP picker
     det_idx, det_prob = self.run_cnn(st_data_cuda, num_win)
     num_det = len(det_idx)
     picks_raw = self.run_rnn(st_data_cuda, det_idx)
@@ -125,7 +125,7 @@ class CERP_Picker_Stream(object):
 
   # 2.1 detect earthquake windows
   def run_cnn(self, st_data_cuda, num_win):
-    print('2.1 run CNN EventNet')
+    print('2.1 run CNN for Event detection')
     t = time.time()
     num_batch = int(np.ceil(num_win / batch_size))
     det_idx = torch.tensor([], dtype=torch.int, device=self.device)
@@ -139,7 +139,7 @@ class CERP_Picker_Stream(object):
             win_idx = i + batch_idx*batch_size
             win_data[i] = st_data_cuda[:,win_idx*win_stride_npts : win_idx*win_stride_npts+win_len_npts].clone()
             win_data[i] = self.preprocess_cuda(win_data[i])
-        # run CNN EventNet
+        # run CNN
         pred_logits = self.model_cnn(win_data)
         pred_class = torch.argmax(pred_logits,1)
         pred_prob = F.softmax(pred_logits)[:,1].detach()
@@ -155,7 +155,7 @@ class CERP_Picker_Stream(object):
 
   # 2.2 pick tp & ts of earthquake window
   def run_rnn(self, st_data_cuda, det_idx):
-    print('2.2 run RNN PhaseNet')
+    print('2.2 run RNN for Phase picking')
     num_win = len(det_idx)
     num_batch = int(np.ceil(num_win / batch_size))
     t = time.time()

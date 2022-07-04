@@ -1,4 +1,4 @@
-""" Training RNN PhaseNet
+""" Training RNN for Phase picking
 """
 import os, time
 import argparse
