@@ -43,7 +43,6 @@ def main():
   # loss & optim
   criterion = nn.CrossEntropyLoss()
   optimizer = optim.Adam(model.parameters(), lr=lr)
-
   # train loop
   t = time.time()
   for epoch_idx in range(num_epochs):
@@ -94,7 +93,6 @@ def train_step(model, data, target, criterion, optimizer):
     optimizer.step()
     return acc_neg.item(), acc_pos.item(), loss.item()
 
-
 # valid one batch
 def valid_step(model, data, target, criterion):
     model.eval()
@@ -107,7 +105,6 @@ def valid_step(model, data, target, criterion):
     acc_pos = pred_class[num_pairs:].eq(target[num_pairs:]).sum() / float(num_pairs)
     return acc_neg.item(), acc_pos.item(), loss.item()
 
-
 # reshape data: [batch_size * 2 (neg,pos)] * num_chn * win_len
 def _reshape_data_target(data, target):
     data = data.transpose(0,1)
@@ -115,7 +112,6 @@ def _reshape_data_target(data, target):
     data = data.reshape(data.size(1)*2, data.size(2), data.size(3))
     target = target.reshape(target.size(1)*2)
     return data, target
-
 
 # initialize weights of model
 def init_weights(m):
