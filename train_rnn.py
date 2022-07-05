@@ -38,7 +38,6 @@ def main():
   valid_sampler = BatchSampler(RandomSampler(valid_set, replacement=True), batch_size=batch_size, drop_last=False)
   valid_loader = DataLoader(valid_set, batch_sampler=valid_sampler, pin_memory=True)
   num_batch = len(train_loader)
-
   # import model
   model = RNN()
   if to_init: model.apply(init_weights)
@@ -47,7 +46,6 @@ def main():
   # loss & optim
   criterion = nn.CrossEntropyLoss()
   optimizer = optim.Adam(model.parameters(), lr=lr)
-
   # train loop
   t = time.time()
   for epoch_idx in range(num_epochs):
@@ -81,7 +79,6 @@ def main():
             writer.add_scalars('seq_acc', sum_acc, global_step)
             writer.add_scalars('dt_sec', sum_dt, global_step)
 
-
 # train one batch
 def train_step(model, data, target, criterion, optimizer):
     model.train()
@@ -98,7 +95,6 @@ def train_step(model, data, target, criterion, optimizer):
     optimizer.step()
     return acc_seq.item(), loss.item()
 
-
 # valid one batch
 def valid_step(model, data, target, criterion):
     model.eval()
@@ -111,7 +107,6 @@ def valid_step(model, data, target, criterion):
     acc_seq = pred_class.eq(target).sum() / float(target.size(0))
     return acc_seq.item(), loss.item()
 
-
 # initialize weights of model
 def init_weights(m):
     if isinstance(m, nn.Linear):
@@ -123,7 +118,7 @@ def init_weights(m):
             elif 'weight_hh' in name: nn.init.orthogonal_(param.data)
             elif 'bias' in name: param.data.fill_(0)
 
- 
+
 if __name__ == '__main__':
   mp.set_start_method('spawn', force=True) # 'spawn' or 'forkserver'
   parser = argparse.ArgumentParser()
