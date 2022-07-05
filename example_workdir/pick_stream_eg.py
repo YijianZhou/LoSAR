@@ -10,7 +10,7 @@ data_dir = '/data/Example_data'
 time_range = '20190704-20190707'
 out_root = 'output/eg'
 ckpt_dir = 'output/eg_ckpt'
-cnn_ckpt = [-1,6000][0]
+cnn_ckpt = [-1,6000][1]
 rnn_ckpt = -1 # -1 for the latest check point
 # picking params
 gpu_idx = '0'
