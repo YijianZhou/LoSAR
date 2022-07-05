@@ -79,6 +79,7 @@ def main():
             writer.add_scalars('seq_acc', sum_acc, global_step)
             writer.add_scalars('dt_sec', sum_dt, global_step)
 
+
 # train one batch
 def train_step(model, data, target, criterion, optimizer):
     model.train()
