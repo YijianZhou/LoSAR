@@ -25,4 +25,5 @@ python parallel_assoc.py
 <br>
 
 ### Reference <br>
-**Yijian Zhou**, Han Yue, Qingkai Kong, Shiyong Zhou; Hybrid Event Detection and Phase‐Picking Algorithm Using Convolutional and Recurrent Neural Networks. Seismological Research Letters 2019;; 90 (3): 1079–1087. doi: https://doi.org/10.1785/0220180319
+- **Zhou, Y.**, H. Yue, Q. Kong, & S. Zhou (2019). Hybrid Event Detection and Phase‐Picking Algorithm Using Convolutional and Recurrent Neural Networks. *Seismological Research Letters*; 90 (3): 1079–1087. doi: [10.1785/0220180319](https://doi.org/10.1785/0220180319)
+- **Zhou, Y.**, H. Yue, L. Fang, S. Zhou, L. Zhao, & A. Ghosh (2021). An Earthquake Detection and Location Architecture for Continuous Seismograms: Phase Picking, Association, Location, and Matched Filter (PALM). *Seismological Research Letters*; 93(1): 413–425. doi: [10.1785/0220210111](https://doi.org/10.1785/0220210111)  
