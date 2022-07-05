@@ -20,8 +20,8 @@ class Config(object):
     self.to_prep = True
     self.train_ratio = 0.9
     self.valid_ratio = 0.1 # ratio of samples to cut for training
-    self.num_aug = 2 # whether data augment
-    self.max_noise = 0.2 # n time P std
+    self.num_aug = 2  # numer of data augment, 1 for no aug
+    self.max_noise = 0.2 # n * p_std
     self.neg_ref = ['P','S'][0] # start time for negative window
     self.read_fpha = reader.read_fpha # import readers
     self.get_data_dict = reader.get_data_dict
@@ -49,9 +49,9 @@ class Config(object):
     self.rnn_lr = 1e-4
     self.rnn_ckpt_step = 25
     self.rnn_summary_step = 10
-    # PAL picker
+    # CERP picker & PAL repicker
     self.picker_batch_size = 100
-    self.tp_dev = 2. # whether same pick in different sliding windows
+    self.tp_dev = 2. # whether is same pick in diff sliding win
     self.ts_dev = 2.
     self.amp_win = [1,4] # sec pre-P & post-S for amp calc
     self.to_repick = [False, True][1]
