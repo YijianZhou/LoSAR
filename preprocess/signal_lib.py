@@ -16,7 +16,7 @@ def preprocess(stream, samp_rate, freq_band):
         st[ii].data[np.isnan(st[ii].data)] = 0
         st[ii].data[np.isinf(st[ii].data)] = 0
     # filter
-    st = st.detrend('demean').detrend('linear').taper(max_percentage=0.05, max_length=10.)
+    st = st.detrend('demean').detrend('linear').taper(max_percentage=0.05, max_length=5.)
     freq_min, freq_max = freq_band
     if freq_min and freq_max:
         return st.filter('bandpass', freqmin=freq_min, freqmax=freq_max)

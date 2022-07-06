@@ -9,8 +9,8 @@ class Config(object):
 
     # data prep & training sample cut
     self.samp_rate = 100
-    self.win_len = 12 # sec
-    self.win_stride = 4 # RNN step stride, sec
+    self.win_len = 15 # sec
+    self.win_stride = 5 # RNN step stride, sec
     self.num_chn = 3
     self.step_len = 0.8 # in sec
     self.step_stride = 0.2
