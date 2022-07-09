@@ -48,8 +48,7 @@ def get_sta_date(event_list):
             if rand<train_ratio: samp_class = 'train'
             elif rand<train_ratio+valid_ratio: samp_class = 'valid'
             else: continue
-            date = str(tp.date)
-            sta_date = '%s_%s'%(net_sta, date) # for one day's stream data
+            sta_date = '%s_%s'%(net_sta, tp.date) # for one day's stream data
             if sta_date not in sta_date_dict:
                 sta_date_dict[sta_date] = [[samp_class, event_name, tp, ts]]
             else: sta_date_dict[sta_date].append([samp_class, event_name, tp, ts])
