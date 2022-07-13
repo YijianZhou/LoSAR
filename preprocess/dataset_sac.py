@@ -25,7 +25,6 @@ class Events(Dataset):
     self.num_chn = cfg.num_chn
     self.samples = np.load(sample_list)
     np.random.shuffle(self.samples)
-    self.samples = self.samples[0:1100000]
 
   def __getitem__(self, index):
     # set label
