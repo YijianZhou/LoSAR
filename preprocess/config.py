@@ -27,7 +27,6 @@ class Config(object):
     self.get_data_dict = reader.get_data_dict
     self.get_sta_dict = reader.get_sta_dict
     self.read_data = reader.read_data
-    self.data_format = 'mseed'
     # cnn model
     self.num_cnn_layers = 8
     self.num_cnn_kernels = 32

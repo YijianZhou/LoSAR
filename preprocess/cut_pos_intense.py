@@ -29,7 +29,6 @@ to_prep = cfg.to_prep
 global_max_norm = cfg.global_max_norm
 num_aug = cfg.num_aug
 max_noise = cfg.max_noise
-data_format = cfg.data_format
 
 def get_sta_date(event_list):
     sta_date_dict = {}
@@ -97,7 +96,7 @@ class Positive(Dataset):
             start_time = tp - np.random.rand(1)[0]*rand_dt
             end_time = start_time + win_len
             st = stream.slice(start_time, end_time)
-            if data_format=='sac': st = sac_ch_time(st)
+            st = sac_ch_time(st)
             if 0 in st.max() or len(st)!=3: continue
             st = st.detrend('demean').normalize(global_max=global_max_norm) # note: no detrend here
             out_paths = [os.path.join(out_dir,'%s.%s.%s.sac'%(aug_idx,samp_name,ii+1)) for ii in range(3)]
