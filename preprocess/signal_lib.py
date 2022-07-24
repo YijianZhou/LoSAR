@@ -41,6 +41,7 @@ def preprocess(stream, samp_rate, freq_band):
 def sac_ch_time(st):
     for tr in st:
         t0 = tr.stats.starttime
+        if not 'sac' in tr.stats: continue
         tr.stats.sac.nzyear = t0.year
         tr.stats.sac.nzjday = t0.julday
         tr.stats.sac.nzhour = t0.hour
