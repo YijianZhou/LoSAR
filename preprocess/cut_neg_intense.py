@@ -91,7 +91,7 @@ class Negative(Dataset):
         for aug_idx in range(n_aug):
             # rand time shift 
             if neg_ref=='P': start_time = tp + np.random.rand(1)[0]*min(rand_dt,2*(ts-tp))
-            elif neg_ref=='S': start_time = ts + np.random.rand(1)[0]*max(rand_dt,ts-tp)
+            elif neg_ref=='S': start_time = ts + np.random.rand(1)[0]*win_len
             end_time = start_time + win_len
             # check if tp-ts exists in selected win
             is_tp = (picks['tp']>max(ts, start_time)) * (picks['tp']<end_time)
