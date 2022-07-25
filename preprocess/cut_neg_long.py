@@ -93,7 +93,7 @@ class Negative(Dataset):
         n_aug = num_aug if samp_class=='train' else 1
         for aug_idx in range(n_aug):
             out_paths = [os.path.join(out_dir,'%s.%s.%s.sac'%(aug_idx,samp_name,ii+1)) for ii in range(3)]
-            if neg_ref=='P': start_time = tp + np.random.rand(1)[0]*min(rand_dt,2*(ts-tp))
+            if neg_ref=='P': start_time = tp + np.random.rand(1)[0]*min(rand_dt,2*(ts-tp)) + 1
             elif neg_ref=='S': start_time = ts + np.random.rand(1)[0]*win_len
             end_time = start_time + win_len
             # check if tp-ts exists in selected win
