@@ -20,6 +20,7 @@ cfg = config.Config()
 samp_rate = cfg.samp_rate
 win_len = cfg.win_len
 rand_dt = win_len/2 # rand before P
+step_len = cfg.step_len
 read_fpha = cfg.read_fpha
 get_data_dict = cfg.get_data_dict
 train_ratio = cfg.train_ratio
@@ -93,7 +94,7 @@ class Positive(Dataset):
         n_aug = num_aug if samp_class=='train' else 1
         for aug_idx in range(n_aug):
             # rand time shift & prep
-            start_time = tp - np.random.rand(1)[0]*rand_dt
+            start_time = tp - np.random.rand(1)[0]*rand_dt - step_len
             end_time = start_time + win_len
             st = stream.slice(start_time, end_time)
             st = sac_ch_time(st)

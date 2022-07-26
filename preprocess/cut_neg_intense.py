@@ -20,6 +20,7 @@ cfg = config.Config()
 samp_rate = cfg.samp_rate
 win_len = cfg.win_len
 rand_dt = win_len/2 # rand after P/S
+step_len = cfg.step_len
 neg_ref = cfg.neg_ref
 read_fpha = cfg.read_fpha
 get_data_dict = cfg.get_data_dict
@@ -89,7 +90,7 @@ class Negative(Dataset):
         n_aug = num_aug if samp_class=='train' else 1
         for aug_idx in range(n_aug):
             # rand time shift 
-            if neg_ref=='P': start_time = tp + np.random.rand(1)[0]*min(rand_dt,2*(ts-tp)) + 1
+            if neg_ref=='P': start_time = tp + np.random.rand(1)[0]*min(rand_dt,2*(ts-tp)) + step_len
             elif neg_ref=='S': start_time = ts + np.random.rand(1)[0]*win_len
             end_time = start_time + win_len
             # check if tp-ts exists in selected win
