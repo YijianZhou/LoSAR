@@ -1,5 +1,5 @@
-# CERP_Pytorch
-**C**NN-**E**vent detector & **R**NN-**P**hase picker (CERP), implemented in Pytorch <br>
+# CERP_TDP
+Hybrid **C**NN-**E**vent detector & **R**NN-**P**hase picker (CERP). This AI-picker follows the strategy of Train-Detect-Pick (TDP) <br>
 
 ## Usage  <br>
 ### 1. Train CERP model <br>
