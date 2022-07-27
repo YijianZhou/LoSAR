@@ -94,7 +94,7 @@ class Positive(Dataset):
         n_aug = num_aug if samp_class=='train' else 1
         for aug_idx in range(n_aug):
             # rand time shift & prep
-            start_time = tp - np.random.rand(1)[0]*rand_dt - step_len
+            start_time = tp - np.random.rand(1)[0] * max(win_len-(ts-tp), rand_dt)
             end_time = start_time + win_len
             st = stream.slice(start_time, end_time)
             st = sac_ch_time(st)

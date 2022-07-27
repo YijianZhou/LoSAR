@@ -86,7 +86,7 @@ class Positive(Dataset):
         n_aug = num_aug if samp_class=='train' else 1
         for aug_idx in range(n_aug):
             out_paths = [os.path.join(out_dir,'%s.%s.%s.sac'%(aug_idx,samp_name,ii+1)) for ii in range(3)]
-            start_time = tp - np.random.rand(1)[0]*rand_dt - step_len
+            start_time = tp - np.random.rand(1)[0] * max(win_len-(ts-tp), rand_dt)
             end_time = start_time + win_len 
             to_aug = True if aug_idx>0 and max_noise>0 else False
             is_cut = cut_event_window(stream_paths, start_time, end_time, tp, ts, win_len, to_aug, out_paths)
