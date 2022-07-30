@@ -102,6 +102,8 @@ class Negative(Dataset):
             st = sac_ch_time(st)
             if 0 in st.max() or len(st)!=3: continue
             st = st.detrend('demean').normalize(global_max=global_max_norm) # note: no detrend here
+            amax_sec = [np.argmax(abs(tr.data))/samp_rate for tr in st]
+            if neg_ref=='P' and min(amax_sec)>win_len/2: continue 
             out_paths = [os.path.join(out_dir,'%s.%s.%s.sac'%(aug_idx,samp_name,ii+1)) for ii in range(3)]
             for ii,tr in enumerate(st):
                 tr.write(out_paths[ii], format='sac')
