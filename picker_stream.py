@@ -221,7 +221,7 @@ class CERP_Picker_Stream(object):
                 tr.data[idx0:idx1] = np.tile(tr.data[idx1:idx2], num_tile)[0:idx1-idx0]
     # resample data
     org_rate = st[0].stats.sampling_rate
-    if org_rate!=samp_rate: st = st.interpolate(samp_rate)
+    if org_rate!=samp_rate: st.resample(samp_rate)
     for ii in range(3):
         st[ii].data[np.isnan(st[ii].data)] = 0
         st[ii].data[np.isinf(st[ii].data)] = 0
