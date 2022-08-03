@@ -15,11 +15,15 @@ def preprocess(stream, samp_rate, freq_band):
         gap_idx = np.where(tr.data==0)[0]
         gap_list = np.split(gap_idx, np.where(np.diff(gap_idx)!=1)[0] + 1)
         gap_list = [gap for gap in gap_list if len(gap)>=10]
-        for gap in gap_list:
+        num_gap = len(gap_list)
+        for ii,gap in enumerate(gap_list):
             idx0, idx1 = max(0, gap[0]-1), min(npts-1, gap[-1]+1)
-            delta = (tr.data[idx1] - tr.data[idx0]) / (idx1-idx0)
-            interp_fill = np.array([tr.data[idx0] + ii*delta for ii in range(idx1-idx0)])
-            tr.data[idx0:idx1] = interp_fill
+            if ii<num_gap-1: idx2 = min(idx1+(idx1-idx0), gap_list[ii+1][0])
+            else: idx2 = min(idx1+(idx1-idx0), npts-1)
+            if idx2==idx1+(idx1-idx0): tr.data[idx0:idx1] = tr.data[idx1:idx2]
+            else:
+                num_tile = int(np.ceil((idx1-idx0)/(idx2-idx1)))
+                tr.data[idx0:idx1] = np.tile(tr.data[idx1:idx2], num_tile)[0:idx1-idx0]
     # resample data
     org_rate = st[0].stats.sampling_rate
     if org_rate!=samp_rate: st.resample(samp_rate)
