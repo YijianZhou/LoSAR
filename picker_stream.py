@@ -196,7 +196,7 @@ class CERP_Picker_Stream(object):
             win_seq[i,j,:] = win_data[:,idx0:idx1]
     return win_seq.view([num_win, num_steps, step_len_npts*num_chn])
 
-  def preprocess(self, st):
+  def preprocess(self, st, max_gap=5.):
     # check num_chn
     if len(st)!=num_chn: print('missing trace!'); return []
     # align time
@@ -204,7 +204,8 @@ class CERP_Picker_Stream(object):
     end_time = min([tr.stats.endtime for tr in st])
     if end_time < start_time + win_len: return []
     st = st.slice(start_time, end_time, nearest_sample=True)
-    # remove data gap
+    # fill data gap
+    max_gap_npts = int(max_gap*samp_rate)
     for tr in st:
         npts = len(tr.data)
         gap_idx = np.where(tr.data==0)[0]
@@ -213,8 +214,8 @@ class CERP_Picker_Stream(object):
         num_gap = len(gap_list)
         for ii,gap in enumerate(gap_list):
             idx0, idx1 = max(0, gap[0]-1), min(npts-1, gap[-1]+1)
-            if ii<num_gap-1: idx2 = min(idx1+(idx1-idx0), gap_list[ii+1][0])
-            else: idx2 = min(idx1+(idx1-idx0), npts-1)
+            if ii<num_gap-1: idx2 = min(idx1+(idx1-idx0), idx1+max_gap_npts, gap_list[ii+1][0])
+            else: idx2 = min(idx1+(idx1-idx0), idx1+max_gap_npts, npts-1)
             if idx1==idx2: continue
             if idx2==idx1+(idx1-idx0): tr.data[idx0:idx1] = tr.data[idx1:idx2]
             else:
