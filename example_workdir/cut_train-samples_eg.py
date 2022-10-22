@@ -4,7 +4,7 @@ import os, shutil
 
 # i/o paths
 data_dir = '/data/Example_data'
-cerp_prep_dir = '/home/zhouyj/software/CERP_Pytorch/preprocess'
+cerp_prep_dir = '/home/zhouyj/software/CERP_TDP/preprocess'
 shutil.copyfile('config_eg.py', os.path.join(cerp_prep_dir, 'config.py'))
 fpha = 'input/example.pha'
 out_root = '/data/bigdata/eg_train-samples_sac'

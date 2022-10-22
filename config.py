@@ -1,5 +1,5 @@
 import sys
-sys.path.append('/home/zhouyj/software/CERP_Pytorch/preprocess')
+sys.path.append('/home/zhouyj/software/CERP_TDP/preprocess')
 import reader
 
 class Config(object):

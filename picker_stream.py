@@ -222,13 +222,13 @@ class CERP_Picker_Stream(object):
                 num_tile = int(np.ceil((idx1-idx0)/(idx2-idx1)))
                 tr.data[idx0:idx1] = np.tile(tr.data[idx1:idx2], num_tile)[0:idx1-idx0]
     # resample data
+    st = st.detrend('demean').detrend('linear').taper(max_percentage=0.05, max_length=5.)
     org_rate = st[0].stats.sampling_rate
     if org_rate!=samp_rate: st.resample(samp_rate)
     for ii in range(3):
         st[ii].data[np.isnan(st[ii].data)] = 0
         st[ii].data[np.isinf(st[ii].data)] = 0
     # filter
-    st = st.detrend('demean').detrend('linear').taper(max_percentage=0.05, max_length=5.)
     freq_min, freq_max = freq_band
     if freq_min and freq_max:
         return st.filter('bandpass', freqmin=freq_min, freqmax=freq_max)

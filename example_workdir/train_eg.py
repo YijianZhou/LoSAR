@@ -4,7 +4,7 @@ import os, shutil
 import warnings
 warnings.filterwarnings("ignore")
 
-cerp_dir = '/home/zhouyj/software/CERP_Pytorch'
+cerp_dir = '/home/zhouyj/software/CERP_TDP'
 shutil.copyfile('config_eg.py', os.path.join(cerp_dir, 'config.py'))
 # train params
 gpu_idx = 0
