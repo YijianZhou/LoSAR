@@ -53,6 +53,7 @@ def cut_event_window(stream_paths, t0, t1, ts, win_len, out_paths):
     st = sac_ch_time(st)
     for ii, tr in enumerate(st): 
         tr.write(out_paths[ii], format='sac')
+        tr = read(out_paths[ii])[0]
         tr.stats.sac.t1 = ts-t0
         tr.write(out_paths[ii], format='sac')
     return True

@@ -50,6 +50,7 @@ def cut_event_window(stream_paths, t0, t1, tp, ts, win_len, to_aug, out_paths):
     for ii, tr in enumerate(st): 
         if to_aug: tr = add_noise(tr, tp, ts)
         tr.write(out_paths[ii], format='sac')
+        tr = read(out_paths[ii])[0]
         tr.stats.sac.t0, tr.stats.sac.t1 = tp-t0, ts-t0
         tr.write(out_paths[ii], format='sac')
     return True
