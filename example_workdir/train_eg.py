@@ -13,8 +13,8 @@ zarr_path = '/data/bigdata/eg_train-samples.zarr'
 ckpt_dir = 'output/eg_ckpt'
 
 # start training
-os.system("python {}/train_cnn.py --gpu_idx={} --zarr_path={} --ckpt_dir=CNN/{} --num_workers={} "\
+os.system("python {}/train_cnn.py --gpu_idx={} --zarr_path={} --ckpt_dir={} --num_workers={} "\
     .format(cerp_dir, gpu_idx, zarr_path, ckpt_dir, num_workers))
-os.system("python {}/train_rnn.py --gpu_idx={}--zarr_path={} --ckpt_dir=RNN/{}  --num_workers={} "\
+os.system("python {}/train_rnn.py --gpu_idx={}--zarr_path={} --ckpt_dir={}  --num_workers={} "\
     .format(cerp_dir, gpu_idx, zarr_path, ckpt_dir, num_workers))
 
