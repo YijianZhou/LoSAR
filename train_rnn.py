@@ -128,5 +128,5 @@ if __name__ == '__main__':
   parser.add_argument('--zarr_path', type=str)
   parser.add_argument('--ckpt_dir', type=str, default='output/eg_ckpt')
   args = parser.parse_args()
-  os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_idx
+  torch.cuda.set_device(int(args.gpu_idx)) 
   main()
