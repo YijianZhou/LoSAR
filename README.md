@@ -1,30 +1,30 @@
-# CERP_TDP
-Hybrid **C**NN-**E**vent detector & **R**NN-**P**hase picker (CERP). This AI-picker follows the strategy of Train-Detect-Pick (TDP) <br>
+# CERP_TED
+A Training-based Earthquake Detection (TED) workflow that utilize the hybrid **C**NN-**E**vent detector & **R**NN-**P**hase picker (CERP)  
 
-## Usage  <br>
-### 1. Train CERP model <br>
-**1.1 run [PAL](https://github.com/YijianZhou/PAL) to generate local training samples**  <br>
-**1.2 cut event windows & generate [Zarr](https://zarr.readthedocs.io/en/stable/) database**  <br>
+## Usage  
+### 1. Train CERP model  
+**1.1 run [PAL](https://github.com/YijianZhou/PAL) to generate local training samples**  
+**1.2 cut event windows & generate [Zarr](https://zarr.readthedocs.io/en/stable/) database**  
 ```bash
 python cut_train-samples.py
 python sac2zarr.py
 ```  
-**1.3 train CERP model**  <br>
+**1.3 train CERP model**  
 ```bash
 python train.py
 ```
-### 2. Apply CERP on continuous data & associate picks <br>
-**2.1 run CERP**
+### 2. Apply CERP on continuous data & associate picks  
+**2.1 run CERP**  
 ```bash
 python pick_stream.py
 ```  
-**2.2 associate picks with PAL associator**
+**2.2 associate picks with PAL associator**  
 ```bash
 python parallel_assoc.py
 ```  
-<br>
 
-### Reference <br>
+
+### Reference  
 - **Zhou, Y.**, H. Yue, Q. Kong, & S. Zhou (2019). Hybrid Event Detection and Phase‐Picking Algorithm Using Convolutional and Recurrent Neural Networks. *Seismological Research Letters*; 90 (3): 1079–1087. doi: [10.1785/0220180319](https://doi.org/10.1785/0220180319)  
 - **Zhou, Y.**, H. Yue, L. Fang, S. Zhou, L. Zhao, & A. Ghosh (2021). An Earthquake Detection and Location Architecture for Continuous Seismograms: Phase Picking, Association, Location, and Matched Filter (PALM). *Seismological Research Letters*; 93(1): 413–425. doi: [10.1785/0220210111](https://doi.org/10.1785/0220210111)  
 - **Zhou, Y.**, A. Ghosh, L. Fang, H. Yue, S. Zhou, & Y. Su (2021). A High-Resolution Seismic Catalog for the 2021 MS6.4/Mw6.1 YangBi Earthquake Sequence, Yunnan, China: Application of AI picker and Matched Filter. *Earthquake Science*; 34(5): 390-398.doi: [10.29382/eqs-2021-0031](https://doi.org/10.29382/eqs-2021-0031)  
