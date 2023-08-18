@@ -3,7 +3,7 @@
 import os, shutil
 
 # i/o paths
-cerp_dir = '/home/zhouyj/software/CERP_TDP'
+cerp_dir = '/home/zhouyj/software/CERP_TED'
 shutil.copyfile('config_eg.py', os.path.join(cerp_dir, 'config.py'))
 fsta = 'input/example_pal_format1.sta'
 data_dir = '/data/Example_data'

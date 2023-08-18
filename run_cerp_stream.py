@@ -1,7 +1,7 @@
 """ Main function for stream picking with CERP
 """
 import os, shutil, glob, sys
-sys.path.append('/home/zhouyj/software/CERP_TDP/preprocess')
+sys.path.append('/home/zhouyj/software/CERP_TED/preprocess')
 import argparse
 import numpy as np
 import torch.multiprocessing as mp
