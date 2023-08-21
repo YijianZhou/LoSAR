@@ -208,7 +208,8 @@ class CERP_Picker_Stream(object):
     max_gap_npts = int(max_gap*samp_rate)
     for tr in st:
         npts = len(tr.data)
-        gap_idx = np.where(tr.data==0)[0]
+        data_diff = np.diff(tr.data)
+        gap_idx = np.where(data_diff==0)[0]
         gap_list = np.split(gap_idx, np.where(np.diff(gap_idx)!=1)[0] + 1)
         gap_list = [gap for gap in gap_list if len(gap)>=10]
         num_gap = len(gap_list)
