@@ -41,10 +41,9 @@ def cut_event_window(stream_paths, t0, t1, tp, ts, win_len, to_aug, out_paths):
     st  = read(stream_paths[0], starttime=t0-win_len/2, endtime=t1+win_len/2)
     st += read(stream_paths[1], starttime=t0-win_len/2, endtime=t1+win_len/2)
     st += read(stream_paths[2], starttime=t0-win_len/2, endtime=t1+win_len/2)
-    if len(st)!=3: return False
+    if 0 in st.max() or len(st)!=3: return False
     if to_prep: st = preprocess(st, samp_rate, freq_band)
     st = st.slice(t0, t1)
-    if len(st)!=3: return False
     if 0 in st.max() or len(st)!=3: return False
     st = st.detrend('demean').normalize(global_max=global_max_norm)
     st = sac_ch_time(st)
