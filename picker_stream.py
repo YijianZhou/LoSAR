@@ -70,9 +70,7 @@ class CERP_Picker_Stream(object):
     if len(stream)!=num_chn: return 
     start_time, end_time = stream[0].stats.starttime+win_stride, stream[0].stats.endtime
     if end_time < start_time + win_len: return
-    stream = stream.slice(start_time, end_time)
-    net, sta = stream[0].stats.network, stream[0].stats.station
-    net_sta = '%s.%s'%(net,sta)
+    net_sta = '%s.%s'%(stream[0].stats.network, stream[0].stats.station)
     num_win = int((end_time - start_time - win_len) / win_stride) + 1
     st_len_npts = min([len(trace) for trace in stream])
     st_data = np.array([trace.data[0:st_len_npts] for trace in stream], dtype=np.float32)
@@ -136,17 +134,21 @@ class CERP_Picker_Stream(object):
         n_win = batch_size if batch_idx<num_batch-1 else num_win%batch_size
         if n_win==0: n_win = batch_size
         win_data = torch.zeros([n_win, num_chn, win_len_npts], dtype=torch.float32, device=self.device)
+        bad_idx = []
         for i in range(n_win):
             win_idx = i + batch_idx*batch_size
             win_data[i] = st_data_cuda[:,win_idx*win_stride_npts : win_idx*win_stride_npts+win_len_npts].clone()
+            if torch.max(win_data[i])==0: bad_idx.append(i) # if data gap
             win_data[i] = self.preprocess_cuda(win_data[i])
+        bad_idx = torch.tensor(bad_idx, dtype=torch.long, device=self.device)
         # run CNN
         pred_logits = self.model_cnn(win_data)
         pred_class = torch.argmax(pred_logits,1)
         pred_prob = F.softmax(pred_logits)[:,1].detach()
+        pred_class[bad_idx] = 1
         # add det_idx & det_prob
-        det_idx_i = torch.where(pred_class==1)[0] + batch_idx*batch_size
-        det_prob_i = pred_prob[pred_class==1]
+        det_idx_i = torch.where(pred_class==0)[0] + batch_idx*batch_size
+        det_prob_i = pred_prob[pred_class==0]
         det_idx = torch.cat((det_idx, det_idx_i.int()))
         det_prob = torch.cat((det_prob, det_prob_i))
     det_idx = det_idx.cpu().numpy()
@@ -204,6 +206,10 @@ class CERP_Picker_Stream(object):
     end_time = min([tr.stats.endtime for tr in st])
     if end_time < start_time + win_len: return []
     st = st.slice(start_time, end_time, nearest_sample=True)
+    # remove nan & inf
+    for ii in range(3):
+        st[ii].data[np.isnan(st[ii].data)] = 0
+        st[ii].data[np.isinf(st[ii].data)] = 0
     # fill data gap
     max_gap_npts = int(max_gap*samp_rate)
     for tr in st:
@@ -226,9 +232,6 @@ class CERP_Picker_Stream(object):
     st = st.detrend('demean').detrend('linear').taper(max_percentage=0.05, max_length=5.)
     org_rate = st[0].stats.sampling_rate
     if org_rate!=samp_rate: st.resample(samp_rate)
-    for ii in range(3):
-        st[ii].data[np.isnan(st[ii].data)] = 0
-        st[ii].data[np.isinf(st[ii].data)] = 0
     # filter
     freq_min, freq_max = freq_band
     if freq_min and freq_max:
@@ -242,6 +245,11 @@ class CERP_Picker_Stream(object):
 
   # preprocess cuda data (in-place)
   def preprocess_cuda(self, data):
+    # fix missed channel
+    max_val = data.max(dim=1).values
+    chn_idx = max_val.nonzero(as_tuple=True)[0][-1]
+    data[max_val==0] = data[chn_idx]
+    # rmean & norm
     data -= torch.mean(data, axis=1).view(num_chn,1)
     if global_max_norm: data /= torch.max(abs(data))
     else: data /= torch.max(abs(data), axis=1).values.view(num_chn,1)
@@ -254,6 +262,7 @@ class CERP_Picker_Stream(object):
     disp /= samp_rate
     return np.amax(np.sum(disp**2, axis=0))**0.5
 
+  # repick with PAL algorithm
   def repick(self, st_data, tp0, ts0):
     # extract data
     tp0_idx = int(tp0*samp_rate)
@@ -311,7 +320,6 @@ class CERP_Picker_Stream(object):
     ts = ts_idx / samp_rate
     return tp, ts
 
-  # calc STA/LTA for a trace of data (abs or square)
   def calc_sta_lta(self, data, win_lta_npts, win_sta_npts):
     npts = len(data)
     if npts < win_lta_npts + win_sta_npts:
@@ -330,7 +338,6 @@ class CERP_Picker_Stream(object):
     sta_lta[np.isnan(sta_lta)] = 0.
     return sta_lta
 
-  # calc kurtosis trace
   def calc_kurtosis(self, data, win_kurt_npts):
     npts = len(data) - win_kurt_npts + 1
     kurt = np.zeros(npts)
@@ -360,4 +367,3 @@ class CERP_Picker_Stream(object):
     pos_peak = pos_idx[pos_idx>first_peak]
     if len(neg_peak)==0 or len(pos_peak)==0: return first_peak
     return max(neg_peak[0], pos_peak[0])
-
