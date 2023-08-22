@@ -64,7 +64,7 @@ class CERP_Picker_Stream(object):
 
   def pick(self, stream, fout=None):
     # 1. preprocess stream data & sliding win
-    print('1. preprocess stream data & slice into windows')
+    print('1. preprocess stream data')
     t = time.time()
     stream = self.preprocess(stream)
     if len(stream)!=num_chn: return 
