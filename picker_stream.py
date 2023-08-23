@@ -107,7 +107,8 @@ class CERP_Picker_Stream(object):
         tp, ts = [win_t0+ti for ti in picks_raw[i]]
         if to_repick: 
             tp_sec, ts_sec = self.repick(st_data, tp-start_time, ts-start_time)
-            tp, ts = [start_time + t_sec for t_sec in [tp_sec, ts_sec]]
+            tp_new, ts_new = [start_time + t_sec for t_sec in [tp_sec, ts_sec]]
+            if ts_new>tp_new: tp, ts = tp_new, ts_new
         # get s_amp
         st = stream.slice(tp-amp_win[0], ts+amp_win[1]).copy()
         amp_data = np.array([tr.data[0:amp_win_npts] for tr in st])
