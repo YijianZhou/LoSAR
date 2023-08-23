@@ -77,8 +77,8 @@ class CERP_Picker_Stream(object):
     st_data_cuda = torch.from_numpy(st_data).cuda(device=self.device)
     # 2. run CERP picker
     det_idx, det_prob = self.run_cnn(st_data_cuda, num_win)
-    num_det = len(det_idx)
     picks_raw = self.run_rnn(st_data_cuda, det_idx)
+    num_det = len(det_idx)
     # 3.1 select picks
     print('3. select & write picks')
     to_drop = []
@@ -99,7 +99,6 @@ class CERP_Picker_Stream(object):
     # 3.2 repick & get s_amp
     print('  repick & get s_amp')
     picks = []
-    tp_old, ts_old = -1, -1
     for i in range(num_det):
         if i in to_drop: continue
         win_idx = det_idx[i]
@@ -113,10 +112,7 @@ class CERP_Picker_Stream(object):
         st = stream.slice(tp-amp_win[0], ts+amp_win[1]).copy()
         amp_data = np.array([tr.data[0:amp_win_npts] for tr in st])
         s_amp = self.get_amp(amp_data)
-        if tp_old!=-1 and (abs(tp-tp_old)<=tp_dev or abs(ts-ts_old)<=ts_dev): 
-            picks[-1] = [net_sta, tp, ts, s_amp, det_prob[i]]
-        else: picks.append([net_sta, tp, ts, s_amp, det_prob[i]])
-        tp_old, ts_old = tp, ts
+        picks.append([net_sta, tp, ts, s_amp, det_prob[i]])
     if fout:
         for net_sta, tp, ts, s_amp, det_prob_i in picks:
             fout.write('{},{},{},{},{:.4f}\n'.format(net_sta, tp, ts, s_amp, det_prob_i))
