@@ -1,9 +1,9 @@
 import os, glob
-from obspy import UTCDateTime
 import time
 import torch
 import torch.nn.functional as F
 import numpy as np
+from obspy import UTCDateTime
 from scipy.stats import kurtosis
 import config
 from models import CNN, RNN
@@ -63,10 +63,10 @@ class CERP_Picker_Stream(object):
     self.model_rnn.eval()
 
   def pick(self, stream, fout=None):
-    # 1. preprocess stream data & sliding win
+    # 1. preprocess stream data 
     print('1. preprocess stream data')
     t = time.time()
-    stream = self.preprocess(stream)
+    stream, st_raw = self.preprocess(stream)
     if len(stream)!=num_chn: return 
     start_time, end_time = stream[0].stats.starttime+win_stride, stream[0].stats.endtime
     if end_time < start_time + win_len: return
@@ -75,9 +75,15 @@ class CERP_Picker_Stream(object):
     st_len_npts = min([len(trace) for trace in stream])
     st_data = np.array([trace.data[0:st_len_npts] for trace in stream], dtype=np.float32)
     st_data_cuda = torch.from_numpy(st_data).cuda(device=self.device)
+    # find miss chn
+    st_raw_npts = min([len(tr) for tr in st_raw])
+    st_raw_data = np.array([tr.data[0:st_raw_npts] for tr in st_raw])
+    raw_stride = int(st_raw[0].stats.sampling_rate * win_stride)
+    raw_win_npts = int(st_raw[0].stats.sampling_rate * win_len)
+    miss_chn = np.array([np.amax(st_raw_data[:, i*raw_stride : i*raw_stride+raw_win_npts], axis=1)==0 for i in range(num_win)])
     # 2. run CERP picker
-    det_idx, det_prob = self.run_cnn(st_data_cuda, num_win)
-    picks_raw = self.run_rnn(st_data_cuda, det_idx)
+    det_idx, det_prob = self.run_cnn(st_data_cuda, num_win, miss_chn)
+    picks_raw = self.run_rnn(st_data_cuda, det_idx, miss_chn)
     num_det = len(det_idx)
     # 3.1 select picks
     print('3. select & write picks')
@@ -120,7 +126,7 @@ class CERP_Picker_Stream(object):
     return picks
 
   # 2.1 detect earthquake windows
-  def run_cnn(self, st_data_cuda, num_win):
+  def run_cnn(self, st_data_cuda, num_win, miss_chn):
     print('2.1 run CNN for Event detection')
     t = time.time()
     num_batch = int(np.ceil(num_win / batch_size))
@@ -131,18 +137,17 @@ class CERP_Picker_Stream(object):
         n_win = batch_size if batch_idx<num_batch-1 else num_win%batch_size
         if n_win==0: n_win = batch_size
         win_data = torch.zeros([n_win, num_chn, win_len_npts], dtype=torch.float32, device=self.device)
-        bad_idx = []
+        is_gap = np.zeros(n_win, dtype=bool)
         for i in range(n_win):
             win_idx = i + batch_idx*batch_size
+            if sum(miss_chn[win_idx])==3: is_gap[i] = True
             win_data[i] = st_data_cuda[:,win_idx*win_stride_npts : win_idx*win_stride_npts+win_len_npts].clone()
-            if torch.max(win_data[i])==0: bad_idx.append(i) # if data gap
-            win_data[i] = self.preprocess_cuda(win_data[i])
-        bad_idx = torch.tensor(bad_idx, dtype=torch.long, device=self.device)
+            win_data[i] = self.preprocess_cuda(win_data[i], miss_chn[win_idx])
         # run CNN
         pred_logits = self.model_cnn(win_data)
         pred_class = torch.argmax(pred_logits,1)
         pred_prob = F.softmax(pred_logits)[:,1].detach()
-        pred_class[bad_idx] = 1
+        pred_class[is_gap] = 1
         # add det_idx & det_prob
         det_idx_i = torch.where(pred_class==0)[0] + batch_idx*batch_size
         det_prob_i = pred_prob[pred_class==0]
@@ -154,7 +159,7 @@ class CERP_Picker_Stream(object):
     return det_idx, det_prob
 
   # 2.2 pick tp & ts of earthquake window
-  def run_rnn(self, st_data_cuda, det_idx):
+  def run_rnn(self, st_data_cuda, det_idx, miss_chn):
     print('2.2 run RNN for Phase picking')
     num_win = len(det_idx)
     num_batch = int(np.ceil(num_win / batch_size))
@@ -162,8 +167,8 @@ class CERP_Picker_Stream(object):
     picks = []
     for batch_idx in range(num_batch):
         # get win_data
-        win_idx = det_idx[batch_idx*batch_size:(batch_idx+1)*batch_size]
-        win_seq = self.st2seq(st_data_cuda, win_idx)
+        win_idx_list = det_idx[batch_idx*batch_size:(batch_idx+1)*batch_size]
+        win_seq = self.st2seq(st_data_cuda, win_idx_list, miss_chn)
         pred_logits = self.model_rnn(win_seq)
         pred_classes = torch.argmax(pred_logits,2).cpu().numpy()
         # decode to sec
@@ -183,12 +188,12 @@ class CERP_Picker_Stream(object):
     print('  {} events picked | RNN run time {:.2f}s'.format(len(picks), time.time()-t))
     return np.array(picks)
 
-  def st2seq(self, st_data_cuda, win_idx):
-    num_win = len(win_idx)
+  def st2seq(self, st_data_cuda, win_idx_list, miss_chn):
+    num_win = len(win_idx_list)
     win_seq = torch.zeros((num_win, num_steps, num_chn, step_len_npts), dtype=torch.float32, device=self.device)
-    for i,win_i in enumerate(win_idx):
-        win_data = st_data_cuda[:,win_i*win_stride_npts : win_i*win_stride_npts+win_len_npts].clone()
-        win_data = self.preprocess_cuda(win_data)
+    for i,win_idx in enumerate(win_idx_list):
+        win_data = st_data_cuda[:,win_idx*win_stride_npts : win_idx*win_stride_npts+win_len_npts].clone()
+        win_data = self.preprocess_cuda(win_data, miss_chn[win_idx])
         for j in range(num_steps):
             idx0 = j * step_stride_npts
             idx1 = idx0 + step_len_npts
@@ -196,17 +201,19 @@ class CERP_Picker_Stream(object):
     return win_seq.view([num_win, num_steps, step_len_npts*num_chn])
 
   def preprocess(self, st, max_gap=5.):
-    # check num_chn
-    if len(st)!=num_chn: print('missing trace!'); return []
     # align time
+    if len(st)!=num_chn: return [], []
     start_time = max([tr.stats.starttime for tr in st])
     end_time = min([tr.stats.endtime for tr in st])
-    if end_time < start_time + win_len: return []
+    if end_time < start_time + win_len: return [], []
     st = st.slice(start_time, end_time, nearest_sample=True)
+    if len(st)!=num_chn: return [], []
     # remove nan & inf
     for ii in range(3):
         st[ii].data[np.isnan(st[ii].data)] = 0
         st[ii].data[np.isinf(st[ii].data)] = 0
+    if max(st.max())==0: return [], []
+    st_raw = st.copy()
     # fill data gap
     max_gap_npts = int(max_gap*samp_rate)
     for tr in st:
@@ -225,27 +232,25 @@ class CERP_Picker_Stream(object):
             else:
                 num_tile = int(np.ceil((idx1-idx0)/(idx2-idx1)))
                 tr.data[idx0:idx1] = np.tile(tr.data[idx1:idx2], num_tile)[0:idx1-idx0]
-    # resample data
+    # resample 
     st = st.detrend('demean').detrend('linear').taper(max_percentage=0.05, max_length=5.)
     org_rate = st[0].stats.sampling_rate
     if org_rate!=samp_rate: st.resample(samp_rate)
     # filter
     freq_min, freq_max = freq_band
     if freq_min and freq_max:
-        return st.filter('bandpass', freqmin=freq_min, freqmax=freq_max)
+        return st.filter('bandpass', freqmin=freq_min, freqmax=freq_max), st_raw
     elif not freq_max and freq_min: 
-        return st.filter('highpass', freq=freq_min)
+        return st.filter('highpass', freq=freq_min), st_raw
     elif not freq_min and freq_max: 
-        return st.filter('lowpass', freq=freq_max)
+        return st.filter('lowpass', freq=freq_max), st_raw
     else:
-        print('filter type not supported!'); return []
+        print('filter type not supported!'); return [], []
 
   # preprocess cuda data (in-place)
-  def preprocess_cuda(self, data):
+  def preprocess_cuda(self, data, is_miss):
     # fix missed channel
-    max_val = data.max(dim=1).values
-    chn_idx = max_val.nonzero(as_tuple=True)[0][-1]
-    data[max_val==0] = data[chn_idx]
+    if 0<sum(is_miss)<3: data[is_miss] = data[~is_miss][-1]
     # rmean & norm
     data -= torch.mean(data, axis=1).view(num_chn,1)
     if global_max_norm: data /= torch.max(abs(data))
