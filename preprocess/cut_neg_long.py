@@ -40,7 +40,6 @@ def get_pick_date(event_list):
         pick_date_dict[date][net_sta].append([tp, ts])
     return pick_date_dict
 
-
 def cut_event_window(stream_paths, t0, t1, ts, out_paths):
     st  = read(stream_paths[0], starttime=t0-win_len/2, endtime=t1+win_len/2)
     st += read(stream_paths[1], starttime=t0-win_len/2, endtime=t1+win_len/2)
