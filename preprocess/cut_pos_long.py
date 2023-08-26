@@ -30,7 +30,6 @@ global_max_norm = cfg.global_max_norm
 num_aug = cfg.num_aug
 max_noise = cfg.max_noise
 
-
 def add_noise(tr, tp, ts):
     if tp>ts: return tr
     scale = np.random.rand(1)[0] * max_noise * np.std(tr.slice(tp, ts).data)
