@@ -64,11 +64,11 @@ class Sequences(Dataset):
     data_seq = np.zeros([self.num_steps, self.step_len*self.num_chn], dtype=np.float32)
     for step_idx in range(self.num_steps):
       for chn_idx in range(self.num_chn):
-        chn_idx_0 = chn_idx * self.step_len
-        step_idx_0 = step_idx * self.step_stride
-        if len(st[chn_idx]) < step_idx_0+self.step_len: continue
-        data_seq[step_idx, chn_idx_0 : chn_idx_0 + self.step_len] = \
-            st[chn_idx].data[step_idx_0 : step_idx_0 + self.step_len]
+        chn_idx0 = chn_idx * self.step_len
+        step_idx0 = step_idx * self.step_stride
+        if len(st[chn_idx]) < step_idx0+self.step_len: continue
+        data_seq[step_idx, chn_idx0 : chn_idx0 + self.step_len] = \
+            st[chn_idx].data[step_idx0 : step_idx0 + self.step_len]
     return data_seq, target_seq
 
   def __len__(self):
