@@ -41,7 +41,7 @@ def get_pick_date(event_list):
     return pick_date_dict
 
 
-def cut_event_window(stream_paths, t0, t1, ts, win_len, out_paths):
+def cut_event_window(stream_paths, t0, t1, ts, out_paths):
     st  = read(stream_paths[0], starttime=t0-win_len/2, endtime=t1+win_len/2)
     st += read(stream_paths[1], starttime=t0-win_len/2, endtime=t1+win_len/2)
     st += read(stream_paths[2], starttime=t0-win_len/2, endtime=t1+win_len/2)
@@ -102,7 +102,7 @@ class Negative(Dataset):
             is_tp = (picks['tp']>max(ts, start_time)) * (picks['tp']<end_time)
             is_ts = (picks['ts']>max(ts, start_time)) * (picks['ts']<end_time)
             if sum(is_tp*is_ts)>0: continue
-            is_cut = cut_event_window(stream_paths, start_time, end_time, ts, win_len, out_paths)
+            is_cut = cut_event_window(stream_paths, start_time, end_time, ts, out_paths)
             if not is_cut: continue
             # record out_paths
             if samp_class=='train': train_paths_i.append(out_paths)
