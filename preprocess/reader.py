@@ -131,5 +131,5 @@ def dtime2str(dtime):
     time = ''.join(str(dtime).split('T')[1].split(':'))[0:9]
     return date + time
 
-""" Custimized functions
+""" Customized functions
 """

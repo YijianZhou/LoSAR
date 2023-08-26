@@ -19,6 +19,7 @@ num_steps = cfg.num_steps
 win_len = int(cfg.win_len * samp_rate)
 step_len = int(cfg.step_len * samp_rate)
 step_stride = int(cfg.step_stride * samp_rate)
+num_classes = cfg.cnn_out_classes
 
 def write_sequence(zarr_dset, data_loader):
     num_samples = len(data_loader)
@@ -80,3 +81,12 @@ if __name__ == '__main__':
     write_event('valid/negative', valid_neg_loader)
     write_sequence('train/sequence', train_seq_loader)
     write_sequence('valid/sequence', valid_seq_loader)
+    if num_classes==3:
+        train_glitch = os.path.join(args.sac_root,'train_glitch.npy')
+        valid_glitch = os.path.join(args.sac_root,'valid_glitch.npy')
+        train_glitch_set = Events(train_glitch)
+        valid_glitch_set = Events(valid_glitch)
+        train_glitch_loader = DataLoader(train_glitch_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
+        valid_glitch_loader = DataLoader(valid_glitch_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
+        write_event('train/glitch', train_glitch_loader)
+        write_event('valid/glitch', valid_glitch_loader)
