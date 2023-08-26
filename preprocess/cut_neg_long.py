@@ -48,6 +48,9 @@ def cut_event_window(stream_paths, t0, t1, ts, out_paths):
     if to_prep: st = preprocess(st, samp_rate, freq_band)
     st = st.slice(t0, t1)
     if 0 in st.max() or len(st)!=3: return False
+    # check FN
+    amax_sec = [np.argmax(abs(tr.data))/samp_rate for tr in st]
+    if neg_ref=='P' and min(amax_sec)>win_len/2: return False 
     st = st.detrend('demean').normalize(global_max=global_max_norm)
     st = sac_ch_time(st)
     for ii, tr in enumerate(st): 
