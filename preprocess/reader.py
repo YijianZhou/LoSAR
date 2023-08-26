@@ -22,6 +22,38 @@ def read_fpha(fpha):
             event_list[-1][-1][net_sta] = [tp, ts]
     return event_list
 
+# read pick file
+def read_fpick(fpick, fpha=None, sel_ratio=None):
+    # get associated picks
+    print('read fpha to find associated picks')
+    pick_assoc_dict = {}
+    if fpha:
+        f=open(fpha); lines=f.readlines(); f.close()
+        for line in lines:
+            codes = line.split(',')
+            if len(codes[0])>10: continue
+            net_sta, tp_str = codes[0:2]
+            date = str(UTCDateTime(tp_str).date)
+            if date not in pick_assoc_dict: pick_assoc_dict[date] = [tp_str]
+            else: pick_assoc_dict[date].append(tp_str)
+    # group picks by date
+    print('read fpick and remove associated picks')
+    pick_dict = {}
+    f=open(fpick); lines=f.readlines(); f.close()
+    for ii,line in enumerate(lines):
+        if ii%1e5==0: print('%s/%s lines done'%(ii,len(lines)))
+        codes = line.split(',')
+        net_sta, tp_str, ts_str = codes[0], codes[2], codes[3] # PAL format
+        tp, ts = UTCDateTime(tp_str), UTCDateTime(ts_str)
+        date = str(tp.date)
+        if date in pick_assoc_dict and tp_str in pick_assoc_dict[date]: continue
+        rand = np.random.rand(1)[0] 
+        if date not in pick_dict: 
+            if sel_ratio and rand<sel_ratio: pick_dict[date] = [[net_sta,tp,ts]]
+        else: 
+            if sel_ratio and rand<sel_ratio: pick_dict[date].append([net_sta,tp,ts])
+    return pick_dict
+
 # read PAL station file
 def get_sta_dict(fsta):
     sta_dict = {}
