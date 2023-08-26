@@ -37,7 +37,7 @@ def add_noise(tr, tp, ts):
     tr.data += np.random.normal(loc=np.mean(tr.data), scale=scale, size=len(tr))
     return tr
 
-def cut_event_window(stream_paths, t0, t1, tp, ts, win_len, to_aug, out_paths):
+def cut_event_window(stream_paths, t0, t1, tp, ts, to_aug, out_paths):
     st  = read(stream_paths[0], starttime=t0-win_len/2, endtime=t1+win_len/2)
     st += read(stream_paths[1], starttime=t0-win_len/2, endtime=t1+win_len/2)
     st += read(stream_paths[2], starttime=t0-win_len/2, endtime=t1+win_len/2)
@@ -87,9 +87,10 @@ class Positive(Dataset):
         n_aug = num_aug if samp_class=='train' else 1
         for aug_idx in range(n_aug):
             out_paths = [os.path.join(out_dir,'%s.%s.%s.sac'%(aug_idx,samp_name,ii+1)) for ii in range(3)]
-            start_time = tp - step_len - np.random.rand(1)[0] * min(win_len-step_len-(ts-tp), rand_dt)            end_time = start_time + win_len 
+            start_time = tp - step_len - np.random.rand(1)[0] * min(win_len-step_len-(ts-tp), rand_dt)
+            end_time = start_time + win_len 
             to_aug = True if aug_idx>0 and max_noise>0 else False
-            is_cut = cut_event_window(stream_paths, start_time, end_time, tp, ts, win_len, to_aug, out_paths)
+            is_cut = cut_event_window(stream_paths, start_time, end_time, tp, ts, to_aug, out_paths)
             if not is_cut: continue
             # record out_paths
             if samp_class=='train': train_paths_i.append(out_paths)
