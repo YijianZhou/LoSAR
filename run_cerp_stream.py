@@ -71,4 +71,3 @@ if __name__ == '__main__':
     dataloader = DataLoader(dataset, batch_size=None, num_workers=args.num_workers)
     for i,_ in enumerate(dataloader):
         if i%10==0: print('%s days done'%i) 
-

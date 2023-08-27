@@ -26,7 +26,6 @@ def main():
   num_epochs = cfg.rnn_num_epochs
   summary_step = cfg.rnn_summary_step
   ckpt_step = cfg.rnn_ckpt_step
-  to_init = cfg.to_init_rnn
   # seq config
   num_steps = cfg.num_steps
   step_stride = cfg.step_stride
@@ -40,8 +39,7 @@ def main():
   num_batch = len(train_loader)
   # import model
   model = RNN()
-  if to_init: model.apply(init_weights)
-  device = torch.device("cuda")
+  device = torch.device("cuda:%s"%args.gpu_idx)
   model.to(device)
   # loss & optim
   criterion = nn.CrossEntropyLoss()
@@ -107,17 +105,6 @@ def valid_step(model, data, target, criterion):
     loss = criterion(pred_logits, target)
     acc_seq = pred_class.eq(target).sum() / float(target.size(0))
     return acc_seq.item(), loss.item()
-
-# initialize weights of model
-def init_weights(m):
-    if isinstance(m, nn.Linear):
-        nn.init.kaiming_uniform_(m.weight)
-        nn.init.constant_(m.bias, 0)
-    elif isinstance(m, nn.GRU):
-        for name, param in m.named_parameters():
-            if 'weight_ih' in name: nn.init.xavier_uniform_(param.data)
-            elif 'weight_hh' in name: nn.init.orthogonal_(param.data)
-            elif 'bias' in name: param.data.fill_(0)
 
 
 if __name__ == '__main__':
