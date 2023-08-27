@@ -39,7 +39,7 @@ class Config(object):
     self.cnn_lr = 1e-4
     self.cnn_ckpt_step = 25
     self.cnn_summary_step = 10
-    self.cnn_out_classes = 3  # 2 for P/N; 3 for P/N/G
+    self.cnn_out_classes = 2  # 2 for P/N; 3 for P/N/G
     # rnn model
     self.rnn_hidden_size = 32
     self.num_rnn_layers = 2
