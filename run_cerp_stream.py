@@ -50,7 +50,7 @@ class Pick_One_Day(Dataset):
 if __name__ == '__main__':
     mp.set_start_method('spawn', force=True) # 'spawn' or 'forkserver'
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu_idx', type=str, default="0")
+    parser.add_argument('--gpu_idx', type=int, default=0)
     parser.add_argument('--num_workers', type=int)
     parser.add_argument('--data_dir', type=str)
     parser.add_argument('--fsta', type=str)
