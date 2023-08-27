@@ -9,12 +9,12 @@ fsta = 'input/example_pal_format1.sta'
 data_dir = '/data/Example_data'
 time_range = '20190704-20190707'
 out_root = 'output/eg'
-ckpt_dir = 'output/eg_ckpt'
-cnn_ckpt = [-1,6000][1]
-rnn_ckpt = -1 # -1 for the latest check point
 # picking params
-gpu_idx = '0'
+gpu_idx = 0
 num_workers = 10
+ckpt_dir = 'output/eg_ckpt'
+cnn_ckpt = [-1,6000][0]
+rnn_ckpt = -1 # -1 for the latest check point
 
 os.system("python {}/run_cerp_stream.py --gpu_idx={} --num_workers={} \
     --data_dir={} --fsta={} --out_root={} --time_range={} \
