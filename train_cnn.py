@@ -40,7 +40,8 @@ def main():
   device = torch.device("cuda:%s"%args.gpu_idx)
   model.to(device)
   # loss & optim
-  criterion = nn.CrossEntropyLoss()
+  weight = torch.tensor([1.,.5,.5]).cuda() if num_classes==3 else torch.tensor([1.,1.]).cuda() 
+  criterion = nn.CrossEntropyLoss(weight=weight) 
   optimizer = optim.Adam(model.parameters(), lr=lr)
   # train loop
   t = time.time()
