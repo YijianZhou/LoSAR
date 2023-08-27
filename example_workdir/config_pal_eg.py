@@ -34,5 +34,5 @@ class Config(object):
     # 3. data pipeline
     self.get_data_dict = dp.get_data_dict
     self.get_sta_dict = dp.get_sta_dict
-    self.get_picks = dp.get_picks
+    self.get_picks = dp.get_cerp_picks
     self.read_data = dp.read_data
