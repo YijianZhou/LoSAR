@@ -22,7 +22,6 @@ class Config(object):
     self.valid_ratio = 0.1  # ratio of samples to cut 
     self.glitch_ratio = 0.1  # ratio of glitches to cut
     self.num_aug = 2  # whether data augment
-    self.max_noise = 0.5  # n time P std
     self.neg_ref = ['P','S'][1] # start time for negative window
     self.read_fpha = reader.read_fpha 
     self.get_data_dict = reader.get_data_dict

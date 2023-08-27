@@ -29,7 +29,6 @@ freq_band = cfg.freq_band
 to_prep = cfg.to_prep
 global_max_norm = cfg.global_max_norm
 num_aug = cfg.num_aug
-max_noise = cfg.max_noise
 
 def get_sta_date(event_list):
     sta_date_dict = {}
@@ -53,13 +52,6 @@ def get_sta_date(event_list):
                 sta_date_dict[sta_date] = [[samp_class, event_name, tp, ts]]
             else: sta_date_dict[sta_date].append([samp_class, event_name, tp, ts])
     return sta_date_dict
-
-def add_noise(tr, tp, ts):
-    if tp>ts: return tr
-    scale = np.random.rand(1)[0] * max_noise * np.std(tr.slice(tp, ts).data)
-    tr.data += np.random.normal(loc=np.mean(tr.data), scale=scale, size=len(tr))
-    return tr
-
 
 class Positive(Dataset):
   """ Dataset for cutting positive samples
@@ -102,7 +94,6 @@ class Positive(Dataset):
             st = st.detrend('demean').normalize(global_max=global_max_norm) # note: no detrend here
             out_paths = [os.path.join(out_dir,'%s.%s.%s.sac'%(aug_idx,samp_name,ii+1)) for ii in range(3)]
             for ii,tr in enumerate(st):
-                if aug_idx>0 and max_noise>0: tr = add_noise(tr, tp, ts)
                 tr.write(out_paths[ii], format='sac')
                 tr = read(out_paths[ii])[0]
                 tr.stats.sac.t0, tr.stats.sac.t1 = tp-start_time, ts-start_time
