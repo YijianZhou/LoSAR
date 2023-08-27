@@ -7,6 +7,8 @@ import config
 cfg = config.Config()
 
 class ResidualBlock(nn.Module):
+  """ Simple residual block that is used in ResNet-18
+  """
   def __init__(self, in_channels, num_kernels, stride=1):
     super(ResidualBlock, self).__init__()
     self.conv1 = nn.Conv1d(in_channels, num_kernels, kernel_size=3, stride=stride, padding=1, bias=False)
@@ -34,6 +36,8 @@ class ResidualBlock(nn.Module):
     return out
 
 class CNN(nn.Module):
+  """ CNN model for Event detection
+  """
   def __init__(self):
     super(CNN, self).__init__()
     # hyper-params
@@ -81,6 +85,8 @@ class CNN(nn.Module):
 
 
 class RNN(nn.Module):
+  """ RNN model for Phase picking
+  """
   def __init__(self):
     super(RNN, self).__init__()
     # hyper-params
