@@ -22,7 +22,8 @@ read_data = cfg.read_data
 
 
 class Pick_One_Day(Dataset):
-
+  """ Parallel picking for each day
+  """
   def __init__(self, picker, date_list, data_dir, sta_dict, out_root):
     self.picker = picker
     self.date_list = date_list
