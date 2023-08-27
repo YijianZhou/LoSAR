@@ -42,7 +42,7 @@ amp_win_npts = int(sum(amp_win)*samp_rate)
 class CERP_Picker_Stream(object):
   """ CERP picker for raw stream data
   """
-  def __init__(self, ckpt_dir, cnn_ckpt=-1, rnn_ckpt=-1, gpu_idx='0'):
+  def __init__(self, ckpt_dir, cnn_ckpt=-1, rnn_ckpt=-1, gpu_idx=0):
     if cnn_ckpt=='-1':
         cnn_ckpt = max([int(os.path.basename(ckpt).split('_')[0]) for ckpt in glob.glob(os.path.join(ckpt_dir, 'CNN', '*.ckpt'))])
     if rnn_ckpt=='-1':
