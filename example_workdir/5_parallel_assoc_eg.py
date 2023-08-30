@@ -5,7 +5,7 @@ from obspy import UTCDateTime
 pal_dir = '/home/zhouyj/software/PAL'
 shutil.copyfile('config_pal_eg.py', os.path.join(pal_dir, 'config.py'))
 sta_file = 'input/example_pal_format1.sta'
-pick_dir = 'output/eg/picks'
+pick_dir = 'output/eg'
 out_root = 'output/eg'
 # parallel params
 time_range = '20190704-20190707'
