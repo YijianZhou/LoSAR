@@ -22,7 +22,6 @@ valid_ratio = cfg.valid_ratio
 freq_band = cfg.freq_band
 to_prep = cfg.to_prep
 global_max_norm = cfg.global_max_norm
-num_aug = cfg.num_aug 
 glitch_ratio = cfg.glitch_ratio
 
 
@@ -71,17 +70,15 @@ class Glitch(Dataset):
         out_dir = os.path.join(self.out_root, samp_class, 'glitch', date)
         if not os.path.exists(out_dir): os.makedirs(out_dir)
         samp_name = 'glitch_%s_%s'%(net_sta,dtime2str(tp))
-        # data aug loop
-        n_aug = num_aug if samp_class=='train' else 1
-        for aug_idx in range(n_aug):
-            out_paths = [os.path.join(out_dir,'%s.%s.%s.sac'%(aug_idx,samp_name,ii+1)) for ii in range(3)]
-            start_time = tp - np.random.rand(1)[0]*rand_dt
-            end_time = start_time + win_len
-            is_cut = cut_event_window(stream_paths, start_time, end_time, tp, ts, out_paths)
-            if not is_cut: continue
-            # record out_paths
-            if samp_class=='train': train_paths_i.append(out_paths)
-            if samp_class=='valid': valid_paths_i.append(out_paths)
+        # cut event window
+        out_paths = [os.path.join(out_dir,'0.%s.%s.sac'%(samp_name,ii+1)) for ii in range(3)]
+        start_time = tp - np.random.rand(1)[0]*rand_dt
+        end_time = start_time + win_len
+        is_cut = cut_event_window(stream_paths, start_time, end_time, tp, ts, out_paths)
+        if not is_cut: continue
+        # record out_paths
+        if samp_class=='train': train_paths_i.append(out_paths)
+        if samp_class=='valid': valid_paths_i.append(out_paths)
     return train_paths_i, valid_paths_i
 
   def __len__(self):
