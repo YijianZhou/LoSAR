@@ -24,6 +24,7 @@ class Config(object):
     self.num_aug = 2  # whether data augment
     self.neg_ref = ['P','S'][1] # start time for negative window
     self.read_fpha = reader.read_fpha 
+    self.read_fpick = reader.read_fpick
     self.get_data_dict = reader.get_data_dict
     self.get_sta_dict = reader.get_sta_dict
     self.read_data = reader.read_data
