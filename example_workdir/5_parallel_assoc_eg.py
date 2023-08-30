@@ -3,7 +3,7 @@ from obspy import UTCDateTime
 
 # i/o paths
 pal_dir = '/home/zhouyj/software/PAL'
-shutil.copyfile('config_eg.py', os.path.join(pal_dir, 'config.py'))
+shutil.copyfile('config_pal_eg.py', os.path.join(pal_dir, 'config.py'))
 sta_file = 'input/example_pal_format1.sta'
 pick_dir = 'output/eg/picks'
 out_root = 'output/eg'
