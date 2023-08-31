@@ -78,6 +78,7 @@ class Sequences(Dataset):
 
 # get target of sequence samples
 def get_seq_target(tp, ts):
+    # tp ts sec to idx
     idx_p = 0 if tp<step_len else int((tp-step_len)/step_stride) + 1
     idx_s = int((ts-step_len)/step_stride) + 1 
     if idx_s>num_steps: idx_s = num_steps
