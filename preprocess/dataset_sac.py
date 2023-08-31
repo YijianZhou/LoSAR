@@ -13,7 +13,8 @@ samp_rate = cfg.samp_rate
 num_chn = cfg.num_chn
 num_steps = cfg.num_steps
 win_len_npts = int(cfg.win_len * samp_rate)
-step_len_npts = int(cfg.step_len * samp_rate)
+step_len = cfg.step_len
+step_len_npts = int(step_len * samp_rate)
 step_stride_npts = int(cfg.step_stride * samp_rate)
 
 
