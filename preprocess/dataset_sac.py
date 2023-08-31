@@ -15,7 +15,8 @@ num_steps = cfg.num_steps
 win_len_npts = int(cfg.win_len * samp_rate)
 step_len = cfg.step_len
 step_len_npts = int(step_len * samp_rate)
-step_stride_npts = int(cfg.step_stride * samp_rate)
+step_stride = cfg.step_stride
+step_stride_npts = int(step_stride * samp_rate)
 
 
 class Events(Dataset):
