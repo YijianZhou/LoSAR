@@ -10,7 +10,7 @@ fpha = 'input/eg_pal_hyp.pha'
 fpick = 'input/eg_pal.pick'  # set as None if only P/N
 out_root = '/data/bigdata/eg_train-samples_sac'
 # cut params
-cut_method = 'intense' # 'intense' or 'long'
+cut_method = 'long' # 'intense' or 'long'
 num_workers = 10
 
 # cut pos & neg
