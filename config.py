@@ -32,7 +32,7 @@ class Config(object):
     self.num_cnn_kernels = 64
     self.cnn_stem_kernel_size = [7]
     self.cnn_stem_conv_stride = [2]
-    self.num_cnn_res_blocks = [2,2,2]
+    self.num_cnn_res_blocks = [2,2,2,2]
     # cnn train
     self.cnn_num_epochs = 10
     self.cnn_batch_size = 128
