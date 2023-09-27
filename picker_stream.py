@@ -70,6 +70,7 @@ class CERP_Picker_Stream(object):
     if len(stream)!=num_chn: return 
     start_time, end_time = stream[0].stats.starttime+win_stride, stream[0].stats.endtime
     if end_time < start_time + win_len: return
+    stream, st_raw = stream.slice(start_time, end_time), st_raw.slice(start_time, end_time)
     net_sta = '%s.%s'%(stream[0].stats.network, stream[0].stats.station)
     num_win = int((end_time - start_time - win_len) / win_stride) + 1
     st_len_npts = min([len(trace) for trace in stream])
