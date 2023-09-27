@@ -81,7 +81,7 @@ class CERP_Picker_Stream(object):
     st_raw_data = np.array([tr.data[0:st_raw_npts] for tr in st_raw])
     raw_stride = int(st_raw[0].stats.sampling_rate * win_stride)
     raw_win_npts = int(st_raw[0].stats.sampling_rate * win_len)
-    miss_chn = np.array([np.amax(st_raw_data[:, i*raw_stride : i*raw_stride+raw_win_npts], axis=1)==0 for i in range(num_win)])
+    miss_chn = np.array([np.sum(st_raw_data[:, i*raw_stride : i*raw_stride+raw_win_npts]==0, axis=1)>win_len_npts/2 for i in range(num_win)])
     # 2. run CERP picker
     det_idx, det_prob = self.run_cnn(st_data_cuda, num_win, miss_chn)
     picks_raw = self.run_rnn(st_data_cuda, det_idx, miss_chn)
