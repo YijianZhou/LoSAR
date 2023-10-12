@@ -1,20 +1,20 @@
-# CERP_TED
-A Training-based Earthquake Detection (TED) workflow that utilize the hybrid **C**NN-**E**vent detector & **R**NN-**P**hase picker (CERP)  
+# RSeL_TED
+A Training-based Earthquake Detection (TED) workflow that utilize RNN for Sequence Labelling (RSeL)  
 
 ## Usage  
-### 1. Train CERP model  
+### 1. Train RSeL model  
 **1.1 run [PAL](https://github.com/YijianZhou/PAL) to generate local training samples**  
 **1.2 cut event windows & generate [Zarr](https://zarr.readthedocs.io/en/stable/) database**  
 ```bash
 python 1_cut_train-samples.py
 python 2_sac2zarr.py
 ```  
-**1.3 train CERP model**  
+**1.3 train RSeL model**  
 ```bash
 python 3_train.py
 ```
-### 2. Apply CERP on continuous data & associate picks  
-**2.1 run CERP**  
+### 2. Apply RSeL on continuous data & associate picks  
+**2.1 run RSeL**  
 ```bash
 python 4_pick_stream.py
 ```  
