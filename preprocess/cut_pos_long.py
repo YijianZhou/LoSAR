@@ -18,7 +18,7 @@ warnings.filterwarnings("ignore")
 cfg = config.Config()
 samp_rate = cfg.samp_rate
 win_len = cfg.win_len
-step_len = cfg.step_len
+step_len = cfg.rnn_step_len
 rand_dt = win_len/2 - step_len  # rand before P
 read_fpha = cfg.read_fpha
 get_data_dict = cfg.get_data_dict
@@ -28,9 +28,16 @@ freq_band = cfg.freq_band
 to_prep = cfg.to_prep
 global_max_norm = cfg.global_max_norm
 num_aug = cfg.num_aug
+max_noise = cfg.max_noise
 
 
-def cut_event_window(stream_paths, t0, t1, tp, ts, out_paths):
+def add_noise(tr, tp, ts, noise_scale):
+    if tp>ts or noise_scale==0: return tr
+    scale = noise_scale * np.std(tr.slice(tp, ts).data)
+    tr.data += np.random.normal(loc=np.mean(tr.data), scale=scale, size=len(tr))
+    return tr
+
+def cut_event_window(stream_paths, t0, t1, tp, ts, to_aug, out_paths):
     st  = read(stream_paths[0], starttime=t0-win_len/2, endtime=t1+win_len/2)
     st += read(stream_paths[1], starttime=t0-win_len/2, endtime=t1+win_len/2)
     st += read(stream_paths[2], starttime=t0-win_len/2, endtime=t1+win_len/2)
@@ -40,7 +47,12 @@ def cut_event_window(stream_paths, t0, t1, tp, ts, out_paths):
     if 0 in st.max() or len(st)!=3: return False
     st = st.detrend('demean').normalize(global_max=global_max_norm)
     st = sac_ch_time(st)
+    noise_scale = max_noise * np.random.rand(1)[0] if to_aug else 0
     for ii, tr in enumerate(st): 
+        tr = add_noise(tr, tp, ts, noise_scale)
+        # remove nan & inf
+        tr.data[np.isnan(tr.data)] = 0
+        tr.data[np.isinf(tr.data)] = 0
         tr.write(out_paths[ii], format='sac')
         tr = read(out_paths[ii])[0]
         tr.stats.sac.t0, tr.stats.sac.t1 = tp-t0, ts-t0
@@ -81,7 +93,8 @@ class Positive(Dataset):
             out_paths = [os.path.join(out_dir,'%s.%s.%s.sac'%(aug_idx,samp_name,ii+1)) for ii in range(3)]
             start_time = tp - step_len - np.random.rand(1)[0] * min(win_len-step_len-(ts-tp), rand_dt)
             end_time = start_time + win_len 
-            is_cut = cut_event_window(stream_paths, start_time, end_time, tp, ts, out_paths)
+            to_aug = True if (aug_idx>0 and max_noise>0) else False
+            is_cut = cut_event_window(stream_paths, start_time, end_time, tp, ts, to_aug, out_paths)
             if not is_cut: continue
             # record out_paths
             if samp_class=='train': train_paths_i.append(out_paths)

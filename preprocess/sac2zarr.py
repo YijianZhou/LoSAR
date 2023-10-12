@@ -6,7 +6,7 @@ import zarr
 import torch.multiprocessing as mp
 import numpy as np
 from torch.utils.data import DataLoader
-from dataset_sac import Events, Sequences
+from dataset_sac import Sequences
 import config
 import warnings
 warnings.filterwarnings("ignore")
@@ -15,11 +15,9 @@ warnings.filterwarnings("ignore")
 cfg = config.Config()
 samp_rate = cfg.samp_rate
 num_chn = cfg.num_chn
-num_steps = cfg.num_steps
+num_steps = cfg.rnn_num_steps
 win_len = int(cfg.win_len * samp_rate)
-step_len = int(cfg.step_len * samp_rate)
-step_stride = int(cfg.step_stride * samp_rate)
-num_classes = cfg.cnn_out_classes
+step_len = int(cfg.rnn_step_len * samp_rate)
 
 def write_sequence(zarr_dset, data_loader):
     num_samples = len(data_loader)
@@ -37,16 +35,6 @@ def write_sequence(zarr_dset, data_loader):
         z_data[idx] = data
         z_target[idx] = target
 
-def write_event(zarr_dset, data_loader):
-    num_samples = len(data_loader)
-    shape = (num_samples, num_chn, win_len)
-    chunks = (1, num_chn, win_len)
-    zarr_out = os.path.join(out_path, zarr_dset)
-    print('writing %s'%zarr_out)
-    z = zarr.open(zarr_out, mode='w', shape=shape, chunks=chunks, dtype=np.float32)
-    for idx, data in enumerate(data_loader):
-        if idx%1000==0: print("done / total = %d / %d" %(idx, num_samples))
-        z[idx] = data
 
 if __name__ == '__main__':
     mp.set_start_method('spawn', force=True) # 'spawn' or 'forkserver'
@@ -62,31 +50,16 @@ if __name__ == '__main__':
     train_neg = os.path.join(args.sac_root,'train_neg.npy')
     valid_neg = os.path.join(args.sac_root,'valid_neg.npy')
     # setup dataloader
-    train_pos_set = Events(train_pos)
-    valid_pos_set = Events(valid_pos)
-    train_neg_set = Events(train_neg)
-    valid_neg_set = Events(valid_neg)
-    train_seq_set = Sequences(train_pos)
-    valid_seq_set = Sequences(valid_pos)
+    train_pos_set = Sequences(train_pos, True)
+    valid_pos_set = Sequences(valid_pos, True)
+    train_neg_set = Sequences(train_neg, False)
+    valid_neg_set = Sequences(valid_neg, False)
     train_pos_loader = DataLoader(train_pos_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
     valid_pos_loader = DataLoader(valid_pos_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
     train_neg_loader = DataLoader(train_neg_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
     valid_neg_loader = DataLoader(valid_neg_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
-    train_seq_loader = DataLoader(train_seq_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
-    valid_seq_loader = DataLoader(valid_seq_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
     # start writing
-    write_event('train/positive', train_pos_loader)
-    write_event('valid/positive', valid_pos_loader)
-    write_event('train/negative', train_neg_loader)
-    write_event('valid/negative', valid_neg_loader)
-    write_sequence('train/sequence', train_seq_loader)
-    write_sequence('valid/sequence', valid_seq_loader)
-    if num_classes==3:
-        train_glitch = os.path.join(args.sac_root,'train_glitch.npy')
-        valid_glitch = os.path.join(args.sac_root,'valid_glitch.npy')
-        train_glitch_set = Events(train_glitch)
-        valid_glitch_set = Events(valid_glitch)
-        train_glitch_loader = DataLoader(train_glitch_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
-        valid_glitch_loader = DataLoader(valid_glitch_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
-        write_event('train/glitch', train_glitch_loader)
-        write_event('valid/glitch', valid_glitch_loader)
+    write_sequence('train/positive', train_pos_loader)
+    write_sequence('valid/positive', valid_pos_loader)
+    write_sequence('train/negative', train_neg_loader)
+    write_sequence('valid/negative', valid_neg_loader)

@@ -1,7 +1,7 @@
-""" Main function for stream picking with CERP
+""" Main function for stream picking with RSeL_TED
 """
 import os, shutil, glob, sys
-sys.path.append('/home/zhouyj/software/CERP_TED/preprocess')
+sys.path.append('/home/zhouyj/software/RSeL_TED/preprocess')
 import argparse
 import numpy as np
 import torch.multiprocessing as mp
@@ -9,7 +9,7 @@ from obspy import read, UTCDateTime
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import torch
-import picker_stream as picker
+import picker 
 import config
 import warnings
 warnings.filterwarnings("ignore")
@@ -22,8 +22,7 @@ read_data = cfg.read_data
 
 
 class Pick_One_Day(Dataset):
-  """ Parallel picking for each day
-  """
+
   def __init__(self, picker, date_list, data_dir, sta_dict, out_root):
     self.picker = picker
     self.date_list = date_list
@@ -50,18 +49,17 @@ class Pick_One_Day(Dataset):
 if __name__ == '__main__':
     mp.set_start_method('spawn', force=True) # 'spawn' or 'forkserver'
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu_idx', type=int, default=0)
+    parser.add_argument('--gpu_idx', type=int)
     parser.add_argument('--num_workers', type=int)
     parser.add_argument('--data_dir', type=str)
     parser.add_argument('--fsta', type=str)
     parser.add_argument('--out_root', type=str)
     parser.add_argument('--time_range', type=str)
     parser.add_argument('--ckpt_dir', type=str)
-    parser.add_argument('--cnn_ckpt', type=str)
-    parser.add_argument('--rnn_ckpt', type=str)
+    parser.add_argument('--ckpt_idx', type=int)
     args = parser.parse_args()
     # setup picker
-    picker = picker.CERP_Picker_Stream(args.ckpt_dir, args.cnn_ckpt, args.rnn_ckpt, args.gpu_idx)
+    picker = picker.RSeL_Picker(args.ckpt_dir, args.ckpt_idx, args.gpu_idx)
     sta_dict = get_sta_dict(args.fsta)
     if not os.path.exists(args.out_root): os.makedirs(args.out_root)
     # start picking 
@@ -70,5 +68,5 @@ if __name__ == '__main__':
     date_list = [start_time+86400*day_idx for day_idx in range(num_days)]
     dataset = Pick_One_Day(picker, date_list, args.data_dir, sta_dict, args.out_root)
     dataloader = DataLoader(dataset, batch_size=None, num_workers=args.num_workers)
-    for i,_ in enumerate(dataloader):
-        if i%10==0: print('%s days done'%i) 
+    for i,_ in enumerate(dataloader): print('%s days done'%i) 
+
