@@ -63,7 +63,7 @@ class Negative(Dataset):
     rand_dt = stream[0].stats.endtime - stream[0].stats.starttime - win_len
     # get picks
     dtype = [('tp','O'),('ts','O')]
-    picks = self.pick_dict[net_sta]
+    picks = self.pick_dict[sta_date]
     picks = np.array([(tp,ts) for tp,ts in picks], dtype=dtype)
     # cut event
     for _ in range(num_cut):
