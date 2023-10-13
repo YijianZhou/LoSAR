@@ -1,3 +1,7 @@
+""" Cut negative samples
+    1. use num of dropped PAL picks to determine the num of neg to cut on each sta-date
+    2. rand slice win on that sta-date
+"""
 import os, glob, shutil
 import argparse
 import numpy as np
@@ -45,7 +49,7 @@ class Negative(Dataset):
 
   def __getitem__(self, index):
     train_paths_i, valid_paths_i = [], []
-    # get sta-date info
+    # get one sta-date 
     sta_date, num_drop = self.pick_num_items[index]
     net_sta, date = sta_date.split('_')
     data_dict = get_data_dict(UTCDateTime(date), self.data_dir)

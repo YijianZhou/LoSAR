@@ -1,6 +1,6 @@
-""" Cut positive samples for long-term data
-    1. for all events
-    2. cut event and preprocess 
+""" Cut positive samples 
+    1. read stream of a sta-date
+    2. cut all events in that sta-date, use real data for aug 
 """
 import os, glob, shutil
 import argparse
@@ -19,7 +19,7 @@ cfg = config.Config()
 samp_rate = cfg.samp_rate
 win_len = cfg.win_len
 step_len = cfg.rnn_step_len
-rand_dt = win_len/2 - step_len  # rand before P
+rand_dt_max = win_len/2 - step_len  # rand before P
 read_fpha = cfg.read_fpha
 get_data_dict = cfg.get_data_dict
 train_ratio = cfg.train_ratio
@@ -31,78 +31,109 @@ num_aug = cfg.num_aug
 max_noise = cfg.max_noise
 
 
-def add_noise(tr, tp, ts, noise_scale):
-    if tp>ts or noise_scale==0: return tr
-    scale = noise_scale * np.std(tr.slice(tp, ts).data)
-    tr.data += np.random.normal(loc=np.mean(tr.data), scale=scale, size=len(tr))
-    return tr
+def get_sta_date(event_list):
+    sta_date_dict = {}
+    for [event_loc, picks] in event_list:
+        # 1. get event info
+        ot, lat, lon = event_loc[0:3]
+        event_name = dtime2str(ot)
+        train_dir = os.path.join(train_root, 'positive', event_name)
+        valid_dir = os.path.join(valid_root, 'positive', event_name)
+        if not os.path.exists(train_dir): os.makedirs(train_dir)
+        if not os.path.exists(valid_dir): os.makedirs(valid_dir)
+        for net_sta, [tp, ts] in picks.items():
+            # 2. divide into train / valid
+            rand = np.random.rand(1)[0]
+            if rand<train_ratio: samp_class = 'train'
+            elif rand<train_ratio+valid_ratio: samp_class = 'valid'
+            else: continue
+            sta_date = '%s_%s'%(net_sta, tp.date) 
+            if sta_date not in sta_date_dict:
+                sta_date_dict[sta_date] = [[samp_class, event_name, tp, ts]]
+            else: sta_date_dict[sta_date].append([samp_class, event_name, tp, ts])
+    return sta_date_dict
 
-def cut_event_window(stream_paths, t0, t1, tp, ts, to_aug, out_paths):
-    st  = read(stream_paths[0], starttime=t0-win_len/2, endtime=t1+win_len/2)
-    st += read(stream_paths[1], starttime=t0-win_len/2, endtime=t1+win_len/2)
-    st += read(stream_paths[2], starttime=t0-win_len/2, endtime=t1+win_len/2)
-    if 0 in st.max() or len(st)!=3: return False
-    if to_prep: st = preprocess(st, samp_rate, freq_band)
-    st = st.slice(t0, t1)
-    if 0 in st.max() or len(st)!=3: return False
-    st = st.detrend('demean').normalize(global_max=global_max_norm)
-    st = sac_ch_time(st)
-    noise_scale = max_noise * np.random.rand(1)[0] if to_aug else 0
-    for ii, tr in enumerate(st): 
-        tr = add_noise(tr, tp, ts, noise_scale)
-        # remove nan & inf
-        tr.data[np.isnan(tr.data)] = 0
-        tr.data[np.isinf(tr.data)] = 0
-        tr.write(out_paths[ii], format='sac')
-        tr = read(out_paths[ii])[0]
-        tr.stats.sac.t0, tr.stats.sac.t1 = tp-t0, ts-t0
-        tr.write(out_paths[ii], format='sac')
-    return True
+def add_noise(st, stream, tp, ts, picks):
+    # find noise win
+    t0, t1 = stream[0].stats.starttime, stream[0].stats.endtime
+    start_time = t0 + win_len/2 + np.random.rand(1)[0] * (t1-t0)
+    end_time = start_time + win_len
+    # check if tp-ts exists in selected win
+    is_tp = (picks['tp']>start_time) * (picks['tp']<end_time)
+    is_ts = (picks['ts']>start_time) * (picks['ts']<end_time)
+    if sum(is_tp*is_ts)>0: return st
+    # add noise from real data
+    st_noise = stream.slice(start_time, end_time).copy().normalize(global_max=global_max_norm)
+    if len(st_noise)!=3: return st
+    npts = min([len(tr) for tr in st+st_noise])
+    noise_scale = max_noise * np.random.rand(1)[0]
+    for ii in range(3):
+        scale = noise_scale * np.std(st[ii].slice(tp, ts).data)
+        st[ii].data[0:npts] += st_noise[ii].data[0:npts] * scale
+    return st.detrend('demean').normalize(global_max=global_max_norm)
+
 
 class Positive(Dataset):
   """ Dataset for cutting positive samples
   """
-  def __init__(self, event_list, data_dir, out_root):
-    self.event_list = event_list
+  def __init__(self, sta_date_items, data_dir, out_root):
+    self.sta_date_items = sta_date_items
     self.data_dir= data_dir
     self.out_root = out_root
 
   def __getitem__(self, index):
     train_paths_i, valid_paths_i = [], []
-    # get event info
-    event_loc, pick_dict = self.event_list[index]
-    ot, lat, lon, dep, mag = event_loc
-    event_name = dtime2str(ot)
-    data_dict = get_data_dict(ot, self.data_dir)
-    # cut event
-    for net_sta, [tp, ts] in pick_dict.items():
-        if net_sta not in data_dict: continue
-        stream_paths = data_dict[net_sta]
-        net, sta = net_sta.split('.')
-        # divide into train / valid
-        rand = np.random.rand(1)[0]
-        if rand<train_ratio: samp_class = 'train'
-        elif rand<train_ratio+valid_ratio: samp_class = 'valid'
-        else: continue
+    # get one sta-date
+    sta_date, samples = self.sta_date_items[index]
+    net_sta, date = sta_date.split('_')
+    data_dict = get_data_dict(UTCDateTime(date), self.data_dir)
+    if net_sta not in data_dict: return train_paths_i, valid_paths_i
+    # read stream
+    st_paths = data_dict[net_sta]
+    try:
+        stream  = read(st_paths[0])
+        stream += read(st_paths[1])
+        stream += read(st_paths[2])
+    except: return train_paths_i, valid_paths_i
+    if to_prep: stream = preprocess(stream, samp_rate, freq_band)
+    if len(stream)!=3: return train_paths_i, valid_paths_i
+    # get picks
+    dtype = [('tp','O'),('ts','O')]
+    picks = np.array([(tp,ts) for _,_,tp,ts in samples], dtype=dtype)
+    # cut event win
+    for [samp_class, event_name, tp, ts] in samples:
+        if tp>ts: continue
         out_dir = os.path.join(self.out_root, samp_class, 'positive', event_name)
-        if not os.path.exists(out_dir): os.makedirs(out_dir)
-        samp_name = 'pos_%s_%s_%s'%(net,sta,event_name[:-3])
-        # data aug loop
+        samp_name = 'pos_%s_%s'%(net_sta, event_name[:-3])
         n_aug = num_aug if samp_class=='train' else 1
         for aug_idx in range(n_aug):
+            # rand time shift & prep
+            rand_dt = min(rand_dt_max, win_len-step_len-(ts-tp))
+            start_time = tp - step_len - np.random.rand(1)[0] * rand_dt
+            end_time = start_time + win_len
+            st = stream.slice(start_time, end_time).copy()
+            sac_t0, sac_t1 = tp-start_time, ts-start_time
+            # noise aug
+            if 0 in st.max() or len(st)!=3: continue
+            st = st.detrend('demean').normalize(global_max=global_max_norm)  # note: no detrend here
+            if aug_idx>0 and max_noise>0: st = add_noise(st, stream, tp, ts, picks)
+            # write stream
+            st = sac_ch_time(st)
             out_paths = [os.path.join(out_dir,'%s.%s.%s.sac'%(aug_idx,samp_name,ii+1)) for ii in range(3)]
-            start_time = tp - step_len - np.random.rand(1)[0] * min(win_len-step_len-(ts-tp), rand_dt)
-            end_time = start_time + win_len 
-            to_aug = True if (aug_idx>0 and max_noise>0) else False
-            is_cut = cut_event_window(stream_paths, start_time, end_time, tp, ts, to_aug, out_paths)
-            if not is_cut: continue
+            for ii,tr in enumerate(st):
+                tr.write(out_paths[ii], format='sac')
+                tr = read(out_paths[ii])[0]
+                tr.stats.sac.t0, tr.stats.sac.t1 = sac_t0, sac_t1
+                tr.data[np.isnan(tr.data)] = 0
+                tr.data[np.isinf(tr.data)] = 0
+                tr.write(out_paths[ii], format='sac')
             # record out_paths
             if samp_class=='train': train_paths_i.append(out_paths)
             if samp_class=='valid': valid_paths_i.append(out_paths)
     return train_paths_i, valid_paths_i
 
   def __len__(self):
-    return len(self.event_list)
+    return len(self.sta_date_items)
 
 
 if __name__ == '__main__':
@@ -120,13 +151,15 @@ if __name__ == '__main__':
     fout_valid_paths = os.path.join(args.out_root,'valid_pos.npy')
     # read fpha
     event_list = read_fpha(args.fpha)
+    sta_date_dict = get_sta_date(event_list)
+    sta_date_items = list(sta_date_dict.items())
     # for sta-date pairs
     train_paths, valid_paths = [], []
-    dataset = Positive(event_list, args.data_dir, args.out_root)
+    dataset = Positive(sta_date_items, args.data_dir, args.out_root)
     dataloader = DataLoader(dataset, num_workers=args.num_workers, batch_size=None)
     for i,[train_paths_i, valid_paths_i] in enumerate(dataloader):
         train_paths += train_paths_i
         valid_paths += valid_paths_i
-        if i%50==0: print('%s/%s events done/total'%(i,len(dataset)))
+        if i%10==0: print('%s/%s sta-date pairs done/total'%(i,len(dataset)))
     np.save(fout_train_paths, train_paths)
     np.save(fout_valid_paths, valid_paths)
