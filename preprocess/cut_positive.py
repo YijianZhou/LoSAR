@@ -56,7 +56,7 @@ def get_sta_date(event_list):
 def add_noise(st, stream, tp, ts, picks):
     # find noise win
     t0, t1 = stream[0].stats.starttime, stream[0].stats.endtime
-    start_time = t0 + win_len/2 + np.random.rand(1)[0] * (t1-t0)
+    start_time = t0 + win_len/2 + np.random.rand(1)[0] * (t1-t0-win_len)
     end_time = start_time + win_len
     # check if tp-ts exists in selected win
     is_tp = (picks['tp']>start_time) * (picks['tp']<end_time)
