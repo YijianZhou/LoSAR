@@ -60,7 +60,7 @@ class Negative(Dataset):
     except: return train_paths_i, valid_paths_i
     if to_prep: stream = preprocess(stream, samp_rate, freq_band)
     if len(stream)!=3: return train_paths_i, valid_paths_i
-    rand_dt = stream[0].stats.endtime - stream[0].stats,starttime - win_len
+    rand_dt = stream[0].stats.endtime - stream[0].stats.starttime - win_len
     # get picks
     dtype = [('tp','O'),('ts','O')]
     picks = self.pick_dict[net_sta]
