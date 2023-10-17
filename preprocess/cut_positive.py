@@ -68,7 +68,7 @@ def add_noise(st, stream, tp, ts, picks):
     npts = min([len(tr) for tr in st+st_noise])
     noise_scale = max_noise * np.random.rand(1)[0]
     for ii in range(3):
-        scale = noise_scale * np.std(st[ii].slice(tp, ts).data)
+        scale = noise_scale * np.amax(abs(st[ii].slice(tp, ts).data))
         st[ii].data[0:npts] += st_noise[ii].data[0:npts] * scale
     return st.detrend('demean').normalize(global_max=global_max_norm)
 
