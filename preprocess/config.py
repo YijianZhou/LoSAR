@@ -35,7 +35,7 @@ class Config(object):
     self.num_epochs = 10
     self.batch_size = 128
     self.lr = 1e-4
-    self.neg_ratio = 0.1
+    self.neg_ratio = 0.5
     self.ckpt_step = 100
     self.summary_step = 10
     # picking config
