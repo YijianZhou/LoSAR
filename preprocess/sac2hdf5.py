@@ -1,8 +1,8 @@
-""" Make Zarr format dataset with SAC files
+""" Make HDF5 dataset with SAC files
 """
 import os
 import argparse
-import zarr
+import h5py
 import torch.multiprocessing as mp
 import numpy as np
 from torch.utils.data import DataLoader
@@ -19,21 +19,19 @@ num_steps = cfg.rnn_num_steps
 win_len = int(cfg.win_len * samp_rate)
 step_len = int(cfg.rnn_step_len * samp_rate)
 
-def write_sequence(zarr_dset, data_loader):
+def write_sequence(h5_dataset, data_loader):
     num_samples = len(data_loader)
     data_shape = (num_samples, num_steps, step_len*num_chn)
     data_chunks = (1, num_steps, step_len*num_chn)
     target_shape = (num_samples, num_steps)
     target_chunks = (1, num_steps)
-    data_out = os.path.join(out_path, zarr_dset+'_data')
-    target_out = os.path.join(out_path, zarr_dset+'_target')
-    print('writing %s & %s'%(data_out, target_out))
-    z_data = zarr.open(data_out, mode='w', shape=data_shape, chunks=data_chunks, dtype=np.float32)
-    z_target = zarr.open(target_out, mode='w', shape=target_shape, chunks=target_chunks, dtype=np.int_)
+    print('writing', h5_dataset)
+    h5_data = h5_file.create_dataset(h5_dataset+'_data', shape=data_shape, chunks=data_chunks, dtype='float32')
+    h5_target = h5_file.create_dataset(h5_dataset+'_target', shape=target_shape, chunks=target_chunks, dtype='i')
     for idx, (data, target) in enumerate(data_loader):
         if idx%1000==0: print("done / total = %d / %d" %(idx, num_samples))
-        z_data[idx] = data
-        z_target[idx] = target
+        h5_data[idx] = data.numpy()
+        h5_target[idx] = target.numpy()
 
 
 if __name__ == '__main__':
@@ -59,7 +57,8 @@ if __name__ == '__main__':
     train_neg_loader = DataLoader(train_neg_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
     valid_neg_loader = DataLoader(valid_neg_set, batch_size=None, shuffle=False, num_workers=args.num_workers)
     # start writing
-    write_sequence('train/positive', train_pos_loader)
-    write_sequence('valid/positive', valid_pos_loader)
-    write_sequence('train/negative', train_neg_loader)
-    write_sequence('valid/negative', valid_neg_loader)
+    with h5py.File(out_path, 'w') as h5_file:
+        write_sequence('train_pos', train_pos_loader)
+        write_sequence('valid_pos', valid_pos_loader)
+        write_sequence('train_neg', train_neg_loader)
+        write_sequence('valid_neg', valid_neg_loader)

@@ -28,8 +28,8 @@ def main():
     num_steps = cfg.rnn_num_steps
     step_stride = cfg.rnn_step_stride
     # set data loader
-    train_set = Positive_Negative(args.zarr_path, 'train')
-    valid_set = Positive_Negative(args.zarr_path, 'valid')
+    train_set = Positive_Negative(args.hdf5_path, 'train')
+    valid_set = Positive_Negative(args.hdf5_path, 'valid')
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True)
     valid_sampler = BatchSampler(RandomSampler(valid_set, replacement=True), batch_size=batch_size, drop_last=False)
     valid_loader = DataLoader(valid_set, batch_sampler=valid_sampler, pin_memory=True)
@@ -123,7 +123,7 @@ def valid_step(model, data, target, criterion):
         if ii==1: acc_list += [1 - num_pos_pred/float(bs)]
     return [acc.item() for acc in acc_list], loss.item()
 
-# reshape data: [batch_size * 2] * num_chn * win_len, 2 for pos & neg
+# reshape data: [batch_size * 2] * num_step * [num_chn * win_len], 2 for pos & neg
 def _reshape_data_target(data, target):
     data = data.transpose(0,1)
     target = target.transpose(0,1)
@@ -137,10 +137,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu_idx', type=int, default=0)
     parser.add_argument('--num_workers', type=int)
-    parser.add_argument('--zarr_path', type=str)
+    parser.add_argument('--hdf5_path', type=str)
     parser.add_argument('--ckpt_dir', type=str)
     args = parser.parse_args()
     torch.cuda.set_device(args.gpu_idx) 
     if not os.path.exists(args.ckpt_dir): os.makedirs(args.ckpt_dir)
     main()
-

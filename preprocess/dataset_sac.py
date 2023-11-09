@@ -15,7 +15,7 @@ step_len = int(cfg.rnn_step_len * cfg.samp_rate)
 step_stride = int(cfg.rnn_step_stride * cfg.samp_rate)
 
 class Sequences(Dataset):
-  """ Dataset for sac2zarr
+  """ Dataset for sac2hdf5
   """
   def __init__(self, sample_list, is_pos):
     self.samples = np.load(sample_list)
