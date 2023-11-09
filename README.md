@@ -1,20 +1,20 @@
-# RSeL_TED
-A Training-based Earthquake Detection (TED) workflow that utilize RNN for Sequence Labelling (RSeL)  
+# SAR_TED
+A Training-based Earthquake Detection (TED) workflow that utilize Self-Attentioned RNN (SAR) for phase picking  
 
 ## Usage  
-### 1. Train RSeL model  
+### 1. Train SAR model  
 **1.1 run [PAL](https://github.com/YijianZhou/PAL) to generate local training samples**  
-**1.2 cut event windows & generate [Zarr](https://zarr.readthedocs.io/en/stable/) database**  
+**1.2 cut event windows & generate [HDF5](https://docs.h5py.org/en/stable/#) database**  
 ```bash
 python 1_cut_train-samples.py
-python 2_sac2zarr.py
+python 2_sac2hdf5.py
 ```  
-**1.3 train RSeL model**  
+**1.3 train SAR model**  
 ```bash
 python 3_train.py
 ```
-### 2. Apply RSeL on continuous data & associate picks  
-**2.1 run RSeL**  
+### 2. Apply SAR on continuous data & associate picks  
+**2.1 run SAR**  
 ```bash
 python 4_pick_stream.py
 ```  
