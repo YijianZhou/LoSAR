@@ -27,7 +27,7 @@ def write_sequence(h5_dataset, data_loader):
     target_chunks = (1, num_steps)
     print('writing', h5_dataset)
     h5_data = h5_file.create_dataset(h5_dataset+'_data', shape=data_shape, chunks=data_chunks, dtype='float32')
-    h5_target = h5_file.create_dataset(h5_dataset+'_target', shape=target_shape, chunks=target_chunks, dtype='i')
+    h5_target = h5_file.create_dataset(h5_dataset+'_target', shape=target_shape, chunks=target_chunks, dtype='i8')
     for idx, (data, target) in enumerate(data_loader):
         if idx%1000==0: print("done / total = %d / %d" %(idx, num_samples))
         h5_data[idx] = data.numpy()
