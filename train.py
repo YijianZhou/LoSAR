@@ -1,4 +1,4 @@
-""" Train RSeL with both Positive and Negative samples
+""" Train SAR with both Positive and Negative samples
 """
 import os, time
 import argparse
