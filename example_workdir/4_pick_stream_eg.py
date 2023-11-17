@@ -3,8 +3,8 @@
 import os, shutil
 
 # i/o paths
-rsel_dir = '/home/zhouyj/software/RSeL_TED'
-shutil.copyfile('config_eg.py', os.path.join(rsel_dir, 'config.py'))
+sar_dir = '/home/zhouyj/software/SAR_TED'
+shutil.copyfile('config_eg.py', os.path.join(sar_dir, 'config.py'))
 fsta = 'input/example_pal_format1.sta'
 data_dir = '/data/Example_data'
 time_range = '20190704-20190707'
@@ -17,6 +17,6 @@ ckpt_idx = -1  # -1 for the latest check point
 
 os.system("python {}/run_picker.py --gpu_idx={} --num_workers={} \
     --data_dir={} --fsta={} --out_root={} --time_range={} --ckpt_dir={} --ckpt_idx={} "\
-    .format(rsel_dir, gpu_idx, num_workers, 
+    .format(sar_dir, gpu_idx, num_workers, 
     data_dir, fsta, out_root, time_range, ckpt_dir, ckpt_idx))
 

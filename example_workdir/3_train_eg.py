@@ -1,18 +1,18 @@
-""" Training RSeL model 
+""" Training SAR model 
 """
 import os, shutil
 import warnings
 warnings.filterwarnings("ignore")
 
 # i/o paths
-rsel_dir = '/home/zhouyj/software/RSeL_TED'
-shutil.copyfile('config_eg.py', os.path.join(rsel_dir, 'config.py'))
+sar_dir = '/home/zhouyj/software/SAR_TED'
+shutil.copyfile('config_eg.py', os.path.join(sar_dir, 'config.py'))
 # train params
 gpu_idx = 0
 num_workers = 10
-hdf5_path = '/data/bigdata/eg_train-samples.h5'
+zarr_path = '/data/bigdata/eg_train-samples.zarr'
 ckpt_dir = 'output/eg_ckpt'
 
 # start training
-os.system("python {}/train.py --gpu_idx={} --num_workers={} --hdf5_path={} --ckpt_dir={} "\
-    .format(rsel_dir, gpu_idx, num_workers, hdf5_path, ckpt_dir))
+os.system("python {}/train.py --gpu_idx={} --num_workers={} --zarr_path={} --ckpt_dir={} "\
+    .format(sar_dir, gpu_idx, num_workers, zarr_path, ckpt_dir))
