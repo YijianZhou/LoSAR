@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import numpy as np
 from obspy import UTCDateTime
 import config
-from models import RSeL
+from models import SAR
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -33,17 +33,17 @@ amp_win = cfg.amp_win
 amp_win_npts = int(sum(amp_win)*samp_rate)
 
 
-class RSeL_Picker(object):
-  """ RSeL picker for raw stream data
+class SAR_Picker(object):
+  """ SAR picker for raw stream data
   """
   def __init__(self, ckpt_dir, ckpt_idx=-1, gpu_idx=0):
     if int(ckpt_idx)==-1:
         ckpt_idx = max([int(os.path.basename(ckpt).split('_')[0]) for ckpt in glob.glob(os.path.join(ckpt_dir, '*.ckpt'))])
     ckpt_idx = sorted(glob.glob(os.path.join(ckpt_dir, '%s_*.ckpt'%ckpt_idx)))[0] 
-    print('RSeL checkpoint: %s'%ckpt_idx)
+    print('SAR checkpoint: %s'%ckpt_idx)
     # load model
     self.device = torch.device("cuda:%s"%gpu_idx)
-    self.model = RSeL()
+    self.model = SAR()
     self.model.load_state_dict(torch.load(ckpt_idx, map_location=self.device))
     self.model.to(self.device)
     self.model.eval()
@@ -68,8 +68,8 @@ class RSeL_Picker(object):
     raw_stride = int(st_raw[0].stats.sampling_rate * win_stride)
     raw_win_npts = int(st_raw[0].stats.sampling_rate * win_len)
     miss_chn = np.array([np.sum(st_raw_data[:, i*raw_stride : i*raw_stride+raw_win_npts]==0, axis=1)>win_len_npts/2 for i in range(num_win)])
-    # 2. run RSeL picker
-    picks_raw = self.run_rsel(st_data_cuda, start_time, num_win, miss_chn)
+    # 2. run SAR picker
+    picks_raw = self.run_sar(st_data_cuda, start_time, num_win, miss_chn)
     picks_raw = np.sort(picks_raw, order=['tp','ts'])
     num_picks = len(picks_raw)
     # 3.1 select picks
@@ -97,8 +97,8 @@ class RSeL_Picker(object):
     print('total run time {:.2f}s'.format(time.time()-t))
     if not fout: return picks
 
-  def run_rsel(self, st_data_cuda, start_time, num_win, miss_chn):
-    print('2. run RSeL for phase picking')
+  def run_sar(self, st_data_cuda, start_time, num_win, miss_chn):
+    print('2. run SAR for phase picking')
     t = time.time()
     num_batch = int(np.ceil(num_win / batch_size))
     picks_raw = []
@@ -108,8 +108,8 @@ class RSeL_Picker(object):
         n_win = batch_size if batch_idx<num_batch-1 else num_win%batch_size
         if n_win==0: n_win = batch_size
         win_idx_list = [ii + batch_idx*batch_size for ii in range(n_win)]
-        data_seq = self.st2seq(st_data_cuda, win_idx_list, miss_chn)
-        pred_logits = self.model(data_seq)
+        win_data_batch = self.st2win(st_data_cuda, win_idx_list, miss_chn)
+        pred_logits = self.model(win_data_batch)
         pred_probs = F.softmax(pred_logits, dim=-1).detach().cpu().numpy()
         # decode to sec
         for nn, pred_prob in enumerate(pred_probs):
@@ -135,18 +135,16 @@ class RSeL_Picker(object):
                     ts = t0 + step_len/2 + step_stride*s_idx
                     s_prob = s_probs[jj]
                     if ts>tp: picks_raw.append((tp, ts, p_prob, s_prob))
-    print('  {} raw P&S picks | RSeL run time {:.2f}s'.format(len(picks_raw), time.time()-t))
+    print('  {} raw P&S picks | SAR run time {:.2f}s'.format(len(picks_raw), time.time()-t))
     return np.array(picks_raw, dtype=dtype)
 
-  def st2seq(self, st_data_cuda, win_idx_list, miss_chn):
+  def st2win(self, st_data_cuda, win_idx_list, miss_chn):
     num_win = len(win_idx_list)
-    data_seq = torch.zeros((num_win, num_steps, num_chn*step_len_npts), dtype=torch.float32, device=self.device)
+    win_data_batch = torch.zeros((num_win, num_chn, win_len_npts), dtype=torch.float32, device=self.device)
     for i,win_idx in enumerate(win_idx_list):
         win_data = st_data_cuda[:,win_idx*win_stride_npts : win_idx*win_stride_npts+win_len_npts].clone()
-        win_data = self.preprocess_cuda(win_data, miss_chn[win_idx])
-        win_data = win_data.unfold(1, step_len_npts, step_stride_npts).permute(1,0,2) 
-        data_seq[i] = win_data.reshape(win_data.size(0), -1)
-    return data_seq 
+        win_data_batch[i] = self.preprocess_cuda(win_data, miss_chn[win_idx])
+    return win_data_batch
 
   def preprocess(self, st, max_gap=5.):
     # align time

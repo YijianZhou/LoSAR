@@ -1,9 +1,9 @@
 import sys
-sys.path.append('/home/zhouyj/software/RSeL_TED/preprocess')
+sys.path.append('/home/zhouyj/software/SAR_TED/preprocess')
 import reader
 
 class Config(object):
-  """ Configure file for RSeL_TED
+  """ Configure file for SAR_TED
   """
   def __init__(self):
 
@@ -25,17 +25,20 @@ class Config(object):
     self.get_data_dict = reader.get_data_dict
     self.get_sta_dict = reader.get_sta_dict
     self.read_data = reader.read_data 
-    # rsel model (GRU)
+    # SAR model 
+    self.cnn_num_kernels = 32
+    self.cnn_kernel_size = 5
+    self.cnn_num_layers = 2
     self.rnn_hidden_size = 128
     self.rnn_num_layers = 2
-    self.rnn_step_len = 1.  # in sec
-    self.rnn_step_stride = 0.1
+    self.rnn_step_len = .5  # in sec
+    self.rnn_step_stride = 0.05
     self.rnn_num_steps = int((self.win_len - self.rnn_step_len) / self.rnn_step_stride) + 1
     # rsel train
     self.num_epochs = 10
     self.batch_size = 128
     self.lr = 1e-4
-    self.neg_ratio = 0.1
+    self.neg_ratio = 0.2
     self.ckpt_step = 100
     self.summary_step = 10
     # picking config
@@ -43,4 +46,4 @@ class Config(object):
     self.picker_batch_size = 20
     self.tp_dev = 1.5 # whether same pick in different sliding windows
     self.ts_dev = 1.5
-    self.amp_win = [1,5] # sec pre-P & post-S for amp calc
+    self.amp_win = [1,6] # sec pre-P & post-S for amp calc

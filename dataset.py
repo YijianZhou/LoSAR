@@ -1,21 +1,26 @@
 import os, glob
 import torch
 from torch.utils.data import Dataset
-import h5py
+import zarr
+from obspy import read, Stream
 import numpy as np
+import config
+cfg = config.Config()
 
 class Positive_Negative(Dataset):
   """ Dataset for SAR training
   """
-  def __init__(self, hdf5_path, train_group):
-    self.hdf5_path = hdf5_path
-    self.train_group = train_group
-    with h5py.File(self.hdf5_path,'r') as h5_file:
-        # get num samples
-        num_pos = len(h5_file[self.train_group+'_pos_target'])
-        num_neg = len(h5_file[self.train_group+'_neg_target'])
-        self.num_samples = min(num_pos, num_neg)
-    # rand shuffle pos & neg index
+  def __init__(self, zarr_path, zarr_group):
+    pos_data_path = os.path.join(zarr_path, zarr_group, 'positive_data')
+    pos_tar_path = os.path.join(zarr_path, zarr_group, 'positive_target')
+    neg_data_path = os.path.join(zarr_path, zarr_group, 'negative_data')
+    neg_tar_path = os.path.join(zarr_path, zarr_group, 'negative_target')
+    self.pos_data = zarr.open(pos_data_path, mode='r')
+    self.neg_data = zarr.open(neg_data_path, mode='r')
+    self.pos_tar = zarr.open(pos_tar_path, mode='r')
+    self.neg_tar = zarr.open(neg_tar_path, mode='r')
+    num_pos, num_neg = self.pos_data.shape[0], self.neg_data.shape[0]
+    self.num_samples = min(num_pos, num_neg)
     self.pos_idx = np.arange(num_pos)
     np.random.shuffle(self.pos_idx)
     self.pos_idx = self.pos_idx[0:self.num_samples]
@@ -24,12 +29,11 @@ class Positive_Negative(Dataset):
     self.neg_idx = self.neg_idx[0:self.num_samples]
 
   def __getitem__(self, index):
-    with h5py.File(self.hdf5_path,'r') as h5_file:
-        pos_data = h5_file[self.train_group+'_pos_data'][self.pos_idx[index]]
-        pos_target = h5_file[self.train_group+'_pos_target'][self.pos_idx[index]]
-        neg_data = h5_file[self.train_group+'_neg_data'][self.neg_idx[index]]
-        neg_target = h5_file[self.train_group+'_neg_target'][self.neg_idx[index]]
-    return np.array([pos_data, neg_data]), np.array([pos_target, neg_target])
+    pos_di = self.pos_data[self.pos_idx[index]]
+    neg_di = self.neg_data[self.neg_idx[index]]
+    pos_ti = self.pos_tar[self.pos_idx[index]]
+    neg_ti = self.neg_tar[self.neg_idx[index]]
+    return np.array([pos_di, neg_di]), np.array([pos_ti, neg_ti])
 
   def __len__(self):
     return self.num_samples

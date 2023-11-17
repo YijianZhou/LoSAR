@@ -8,7 +8,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, RandomSampler, BatchSampler
 import torch.multiprocessing as mp
 from dataset import Positive_Negative
-from models import RSeL
+from models import SAR
 import config
 from tensorboardX import SummaryWriter
 import warnings
@@ -28,14 +28,14 @@ def main():
     num_steps = cfg.rnn_num_steps
     step_stride = cfg.rnn_step_stride
     # set data loader
-    train_set = Positive_Negative(args.hdf5_path, 'train')
-    valid_set = Positive_Negative(args.hdf5_path, 'valid')
+    train_set = Positive_Negative(args.zarr_path, 'train')
+    valid_set = Positive_Negative(args.zarr_path, 'valid')
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True)
     valid_sampler = BatchSampler(RandomSampler(valid_set, replacement=True), batch_size=batch_size, drop_last=False)
     valid_loader = DataLoader(valid_set, batch_sampler=valid_sampler, pin_memory=True)
     num_batch = len(train_loader)
     # import model
-    model = RSeL() 
+    model = SAR() 
     device = torch.device("cuda:%s"%args.gpu_idx)
     model.to(device)
     # loss & optim
@@ -86,8 +86,8 @@ def train_step(model, data, target, neg_ratio, criterion, optimizer):
     data = data[0:num_pos+num_neg]
     target = target[0:num_pos+num_neg]
     # model prediction
-    pred_logits = model(data) # batch_size * num_step * 3
-    pred_class = torch.argmax(pred_logits,2) # batch_size * num_step
+    pred_logits = model(data)  # batch_size * num_step * 3
+    pred_class = torch.argmax(pred_logits,2)  # batch_size * num_step
     loss = criterion(pred_logits.view(-1,3), target.view(-1))
     # get accuracy
     acc_list = [] 
@@ -109,8 +109,8 @@ def valid_step(model, data, target, criterion):
     model.eval()
     bs = int(target.size(0)/2)
     # model prediction
-    pred_logits = model(data) # batch_size * num_step * 3
-    pred_class = torch.argmax(pred_logits,2) # batch_size * num_step
+    pred_logits = model(data)  # batch_size * num_step * 3
+    pred_class = torch.argmax(pred_logits,2)  # batch_size * num_step
     loss = criterion(pred_logits.view(-1,3), target.view(-1))
     # get accuracy
     acc_list = [] 
@@ -123,9 +123,8 @@ def valid_step(model, data, target, criterion):
         if ii==1: acc_list += [1 - num_pos_pred/float(bs)]
     return [acc.item() for acc in acc_list], loss.item()
 
-# reshape data: [batch_size * 2] * num_step * [num_chn * win_len], 2 for pos & neg
 def _reshape_data_target(data, target):
-    data = data.transpose(0,1)
+    data = data.transpose(0,1)  # batch_size * 2 * num_chn * win_len, 2 for pos & neg
     target = target.transpose(0,1)
     data = data.reshape(data.size(0)*data.size(1), *data.shape[2:])
     target = target.reshape(target.size(0)*target.size(1), *target.shape[2:])
@@ -133,11 +132,11 @@ def _reshape_data_target(data, target):
 
 
 if __name__ == '__main__':
-    mp.set_start_method('spawn', force=True) # 'spawn' or 'forkserver'
+    mp.set_start_method('spawn', force=True)  # 'spawn' or 'forkserver'
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu_idx', type=int, default=0)
     parser.add_argument('--num_workers', type=int)
-    parser.add_argument('--hdf5_path', type=str)
+    parser.add_argument('--zarr_path', type=str)
     parser.add_argument('--ckpt_dir', type=str)
     args = parser.parse_args()
     torch.cuda.set_device(args.gpu_idx) 
