@@ -1,5 +1,5 @@
 # SAR_TED
-A Training-based Earthquake Detection (TED) workflow that utilize Self-Attentioned RNN (SAR) for phase picking  
+A Training-based Earthquake Detection (TED) workflow that utilize Self-Attention RNN (SAR) for phase picking  
 
 ## Usage  
 ### 1. Train SAR model  

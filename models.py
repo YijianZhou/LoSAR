@@ -1,4 +1,4 @@
-""" Defination of Self-Attentioend RNN (SAR) Model
+""" Defination of Self-Attention RNN (SAR) Model
 """
 import torch
 import torch.nn as nn
