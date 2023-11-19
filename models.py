@@ -18,7 +18,8 @@ class SAR(nn.Module):
     self.gru_layer = nn.GRU(input_size=self.input_size,
         hidden_size=self.hidden_size,
         num_layers=self.num_layers,
-        batch_first=True, bidirectional=True)
+        bidirectional=True,
+        batch_first=True)
     self.attention = nn.MultiheadAttention(embed_dim=2*self.hidden_size,
         num_heads=self.num_heads,
         batch_first=True)
