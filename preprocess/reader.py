@@ -8,7 +8,7 @@ from obspy import read, UTCDateTime
 # read phase file
 def read_fpha(fpha):
     f=open(fpha); lines=f.readlines(); f.close()
-    event_list = []
+    event_list, num_pos = [], 0
     for line in lines:
         codes = line.split(',')
         if len(codes[0])>10:
@@ -20,7 +20,8 @@ def read_fpha(fpha):
             net_sta = codes[0]
             tp, ts = [UTCDateTime(code) for code in codes[1:3]]
             event_list[-1][-1][net_sta] = [tp, ts]
-    return event_list
+            num_pos += 1
+    return event_list, num_pos
 
 # read pick file to get number of dropped picks
 def read_fpick(fpick, fpha=None):
@@ -38,18 +39,20 @@ def read_fpick(fpick, fpha=None):
             else: pick_assoc_dict[date].append(tp_str)
     # group picks by sta-date
     print('read fpick and remove associated picks')
-    pick_num_dict = {}
+    pick_num_dict, num_picks = {}, 0
     f=open(fpick); lines=f.readlines(); f.close()
     for ii,line in enumerate(lines):
         if ii%1e5==0: print('%s/%s lines done'%(ii,len(lines)))
         codes = line.split(',')
         net_sta, tp_str = codes[0], codes[2]  # PAL format
         date = str(UTCDateTime(tp_str).date)
-        if date in pick_assoc_dict and tp_str in pick_assoc_dict[date]: continue
         sta_date = '%s_%s'%(net_sta, date)
-        if sta_date not in pick_num_dict: pick_num_dict[sta_date] = 1
-        else: pick_num_dict[sta_date] += 1
-    return pick_num_dict
+        if sta_date not in pick_num_dict: pick_num_dict[sta_date] = [0,0] # unassoc, assoc
+        if date in pick_assoc_dict and tp_str in pick_assoc_dict[date]: 
+            pick_num_dict[sta_date][1] += 1
+        else: pick_num_dict[sta_date][0] += 1
+        num_picks += 1
+    return pick_num_dict, num_picks
 
 # read PAL station file
 def get_sta_dict(fsta):

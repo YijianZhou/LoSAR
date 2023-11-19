@@ -108,8 +108,8 @@ class SAR_Picker(object):
         n_win = batch_size if batch_idx<num_batch-1 else num_win%batch_size
         if n_win==0: n_win = batch_size
         win_idx_list = [ii + batch_idx*batch_size for ii in range(n_win)]
-        win_data_batch = self.st2win(st_data_cuda, win_idx_list, miss_chn)
-        pred_logits = self.model(win_data_batch)
+        data_seq = self.st2seq(st_data_cuda, win_idx_list, miss_chn)
+        pred_logits = self.model(data_seq)
         pred_probs = F.softmax(pred_logits, dim=-1).detach().cpu().numpy()
         # decode to sec
         for nn, pred_prob in enumerate(pred_probs):
@@ -138,13 +138,15 @@ class SAR_Picker(object):
     print('  {} raw P&S picks | SAR run time {:.2f}s'.format(len(picks_raw), time.time()-t))
     return np.array(picks_raw, dtype=dtype)
 
-  def st2win(self, st_data_cuda, win_idx_list, miss_chn):
+  def st2seq(self, st_data_cuda, win_idx_list, miss_chn):
     num_win = len(win_idx_list)
-    win_data_batch = torch.zeros((num_win, num_chn, win_len_npts), dtype=torch.float32, device=self.device)
+    data_seq = torch.zeros((num_win, num_steps, num_chn*step_len_npts), dtype=torch.float32, device=self.device)
     for i,win_idx in enumerate(win_idx_list):
         win_data = st_data_cuda[:,win_idx*win_stride_npts : win_idx*win_stride_npts+win_len_npts].clone()
-        win_data_batch[i] = self.preprocess_cuda(win_data, miss_chn[win_idx])
-    return win_data_batch
+        win_data = self.preprocess_cuda(win_data, miss_chn[win_idx])
+        win_data = win_data.unfold(1, step_len_npts, step_stride_npts).permute(1,0,2)
+        data_seq[i] = win_data.reshape(win_data.size(0), -1)
+    return data_seq
 
   def preprocess(self, st, max_gap=5.):
     # align time

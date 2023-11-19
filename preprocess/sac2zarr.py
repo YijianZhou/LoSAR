@@ -21,8 +21,8 @@ step_len = int(cfg.rnn_step_len * samp_rate)
 
 def write_sequence(zarr_dset, data_loader):
     num_samples = len(data_loader)
-    data_shape = (num_samples, num_chn, win_len)
-    data_chunks = (1, num_chn, win_len)
+    data_shape = (num_samples, num_steps, step_len*num_chn)
+    data_chunks = (1, num_steps, step_len*num_chn)
     target_shape = (num_samples, num_steps)
     target_chunks = (1, num_steps)
     data_out = os.path.join(out_path, zarr_dset+'_data')

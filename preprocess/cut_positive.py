@@ -1,6 +1,6 @@
 """ Cut positive samples 
-    1. read stream of a sta-date
-    2. cut all events in that sta-date, use real data for aug 
+    1. for all sta-date pairs
+    2. cut all events in that sta-date, use real data for noise aug 
 """
 import os, glob, shutil
 import argparse
@@ -30,7 +30,6 @@ global_max_norm = cfg.global_max_norm
 num_aug = cfg.num_aug
 max_noise = cfg.max_noise
 
-
 def get_sta_date(event_list):
     sta_date_dict = {}
     for [event_loc, picks] in event_list:
@@ -53,17 +52,22 @@ def get_sta_date(event_list):
             else: sta_date_dict[sta_date].append([samp_class, event_name, tp, ts])
     return sta_date_dict
 
-def add_noise(st, stream, tp, ts, picks):
+def add_noise(st, stream_paths, tp, ts, picks):
     # find noise win
-    t0, t1 = stream[0].stats.starttime, stream[0].stats.endtime
-    start_time = t0 + win_len/2 + np.random.rand(1)[0] * (t1-t0-win_len)
-    end_time = start_time + win_len
+    date = UTCDateTime(st[0].stats.starttime.date)
+    t0 = date + win_len/2 + np.random.rand(1)[0] * (86400-win_len*1.5)
+    t1 = t0 + win_len
     # check if tp-ts exists in selected win
-    is_tp = (picks['tp']>start_time) * (picks['tp']<end_time)
-    is_ts = (picks['ts']>start_time) * (picks['ts']<end_time)
+    is_tp = (picks['tp']>t0) * (picks['tp']<t1)
+    is_ts = (picks['ts']>t0) * (picks['ts']<t1)
     if sum(is_tp*is_ts)>0: return st
     # add noise from real data
-    st_noise = stream.slice(start_time, end_time).copy().normalize(global_max=global_max_norm)
+    st_noise  = read(stream_paths[0], starttime=t0-win_len/2, endtime=t1+win_len/2)
+    st_noise += read(stream_paths[1], starttime=t0-win_len/2, endtime=t1+win_len/2)
+    st_noise += read(stream_paths[2], starttime=t0-win_len/2, endtime=t1+win_len/2)
+    if len(st_noise)!=3: return st
+    if to_prep: st_noise = preprocess(st_noise, samp_rate, freq_band)
+    st_noise = st_noise.slice(t0, t1).normalize(global_max=global_max_norm)
     if len(st_noise)!=3: return st
     npts = min([len(tr) for tr in st+st_noise])
     noise_scale = max_noise * np.random.rand(1)[0]
@@ -72,7 +76,17 @@ def add_noise(st, stream, tp, ts, picks):
         st[ii].data[0:npts] += st_noise[ii].data[0:npts] * scale
     return st.detrend('demean').normalize(global_max=global_max_norm)
 
-
+def cut_event_window(stream_paths, t0, t1):
+    st  = read(stream_paths[0], starttime=t0-win_len/2, endtime=t1+win_len/2)
+    st += read(stream_paths[1], starttime=t0-win_len/2, endtime=t1+win_len/2)
+    st += read(stream_paths[2], starttime=t0-win_len/2, endtime=t1+win_len/2)
+    if 0 in st.max() or len(st)!=3: return None
+    if to_prep: st = preprocess(st, samp_rate, freq_band)
+    st = st.slice(t0, t1)
+    if 0 in st.max() or len(st)!=3: return None
+    st = st.detrend('demean').normalize(global_max=global_max_norm)
+    return st
+    
 class Positive(Dataset):
   """ Dataset for cutting positive samples
   """
@@ -88,15 +102,7 @@ class Positive(Dataset):
     net_sta, date = sta_date.split('_')
     data_dict = get_data_dict(UTCDateTime(date), self.data_dir)
     if net_sta not in data_dict: return train_paths_i, valid_paths_i
-    # read stream
-    st_paths = data_dict[net_sta]
-    try:
-        stream  = read(st_paths[0])
-        stream += read(st_paths[1])
-        stream += read(st_paths[2])
-    except: return train_paths_i, valid_paths_i
-    if to_prep: stream = preprocess(stream, samp_rate, freq_band)
-    if len(stream)!=3: return train_paths_i, valid_paths_i
+    stream_paths = data_dict[net_sta]
     # get picks
     dtype = [('tp','O'),('ts','O')]
     picks = np.array([(tp,ts) for _,_,tp,ts in samples], dtype=dtype)
@@ -111,12 +117,10 @@ class Positive(Dataset):
             rand_dt = min(rand_dt_max, win_len-step_len-(ts-tp))
             start_time = tp - step_len - np.random.rand(1)[0] * rand_dt
             end_time = start_time + win_len
-            st = stream.slice(start_time, end_time).copy()
             sac_t0, sac_t1 = tp-start_time, ts-start_time
-            # noise aug
-            if 0 in st.max() or len(st)!=3: continue
-            st = st.detrend('demean').normalize(global_max=global_max_norm)  # note: no detrend here
-            if aug_idx>0 and max_noise>0: st = add_noise(st, stream, tp, ts, picks)
+            st = cut_event_window(stream_paths, start_time, end_time)
+            if not st: continue
+            if aug_idx>0 and max_noise>0: st = add_noise(st, stream_paths, tp, ts, picks)
             # write stream
             st = sac_ch_time(st)
             out_paths = [os.path.join(out_dir,'%s.%s.%s.sac'%(aug_idx,samp_name,ii+1)) for ii in range(3)]
@@ -137,7 +141,7 @@ class Positive(Dataset):
 
 
 if __name__ == '__main__':
-    mp.set_start_method('spawn', force=True) # 'spawn' or 'forkserver'
+    mp.set_start_method('spawn', force=True)  # 'spawn' or 'forkserver'
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dir', type=str)
     parser.add_argument('--fpha', type=str)
@@ -150,7 +154,7 @@ if __name__ == '__main__':
     fout_train_paths = os.path.join(args.out_root,'train_pos.npy')
     fout_valid_paths = os.path.join(args.out_root,'valid_pos.npy')
     # read fpha
-    event_list = read_fpha(args.fpha)
+    event_list, _ = read_fpha(args.fpha)
     sta_date_dict = get_sta_date(event_list)
     sta_date_items = list(sta_date_dict.items())
     # for sta-date pairs

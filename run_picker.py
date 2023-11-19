@@ -20,9 +20,7 @@ get_data_dict = cfg.get_data_dict
 get_sta_dict = cfg.get_sta_dict
 read_data = cfg.read_data
 
-
 class Pick_One_Day(Dataset):
-
   def __init__(self, picker, date_list, data_dir, sta_dict, out_root):
     self.picker = picker
     self.date_list = date_list

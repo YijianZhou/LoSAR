@@ -1,3 +1,5 @@
+""" Dataset for SAR training
+"""
 import os, glob
 import torch
 from torch.utils.data import Dataset
@@ -8,8 +10,6 @@ import config
 cfg = config.Config()
 
 class Positive_Negative(Dataset):
-  """ Dataset for SAR training
-  """
   def __init__(self, zarr_path, zarr_group):
     pos_data_path = os.path.join(zarr_path, zarr_group, 'positive_data')
     pos_tar_path = os.path.join(zarr_path, zarr_group, 'positive_target')
@@ -20,13 +20,10 @@ class Positive_Negative(Dataset):
     self.pos_tar = zarr.open(pos_tar_path, mode='r')
     self.neg_tar = zarr.open(neg_tar_path, mode='r')
     num_pos, num_neg = self.pos_data.shape[0], self.neg_data.shape[0]
-    self.num_samples = min(num_pos, num_neg)
-    self.pos_idx = np.arange(num_pos)
-    np.random.shuffle(self.pos_idx)
-    self.pos_idx = self.pos_idx[0:self.num_samples]
-    self.neg_idx = np.arange(num_neg)
-    np.random.shuffle(self.neg_idx)
-    self.neg_idx = self.neg_idx[0:self.num_samples]
+    self.num_samples = num_pos
+    self.pos_idx = np.random.permutation(num_pos)
+    self.neg_idx = np.tile(np.arange(num_neg), int(num_pos/num_neg)+1)
+    self.neg_idx = np.random.permutation(self.neg_idx)[0:num_pos]
 
   def __getitem__(self, index):
     pos_di = self.pos_data[self.pos_idx[index]]

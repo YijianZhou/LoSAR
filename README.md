@@ -4,10 +4,10 @@ A Training-based Earthquake Detection (TED) workflow that utilize Self-Attention
 ## Usage  
 ### 1. Train SAR model  
 **1.1 run [PAL](https://github.com/YijianZhou/PAL) to generate local training samples**  
-**1.2 cut event windows & generate [HDF5](https://docs.h5py.org/en/stable/#) database**  
+**1.2 cut event windows & generate [Zarr](https://zarr.readthedocs.io/en/stable/) database**  
 ```bash
 python 1_cut_train-samples.py
-python 2_sac2hdf5.py
+python 2_sac2zarr.py
 ```  
 **1.3 train SAR model**  
 ```bash

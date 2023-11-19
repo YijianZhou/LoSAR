@@ -124,7 +124,7 @@ def valid_step(model, data, target, criterion):
     return [acc.item() for acc in acc_list], loss.item()
 
 def _reshape_data_target(data, target):
-    data = data.transpose(0,1)  # batch_size * 2 * num_chn * win_len, 2 for pos & neg
+    data = data.transpose(0,1)  # batch_size * 2 * num_step * step_len, 2 for pos & neg
     target = target.transpose(0,1)
     data = data.reshape(data.size(0)*data.size(1), *data.shape[2:])
     target = target.reshape(target.size(0)*target.size(1), *target.shape[2:])

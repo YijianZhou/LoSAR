@@ -23,15 +23,17 @@ class Sequences(Dataset):
     self.is_pos = is_pos
 
   def __getitem__(self, index):
-    # set label
-    st_paths = self.samples[index]
     # read data
+    st_paths = self.samples[index]
     st = Stream([read(st_path)[0] for st_path in st_paths])
-    st_data = np.array([tr.data[0:win_len] for tr in st])
-    data_seq = np.zeros([num_chn, win_len], dtype=np.float32)
-    for ii in range(num_chn):
-        npts = len(st_data[ii])
-        data_seq[ii][0:npts] = st_data[ii]
+    st_data = torch.from_numpy(np.array([tr.data[0:win_len] for tr in st])).float()
+    # slice stream into sequence
+    try: data_seq = st_data.unfold(1, step_len, step_stride).permute(1,0,2)
+    except: data_seq = torch.zeros(num_steps, num_chn, step_len)
+    data_seq = data_seq.reshape(data_seq.size(0), -1)
+    if data_seq.size(0)!=num_steps:
+        num_step_pad = num_steps - data_seq.size(0)
+        data_seq = torch.cat((data_seq, torch.zeros(num_step_pad, data_seq.size(1))))
     # get target
     header = st[0].stats.sac
     if self.is_pos: tp, ts = header.t0, header.t1
