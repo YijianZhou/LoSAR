@@ -27,8 +27,8 @@ class Config(object):
     # SAR model 
     self.rnn_hidden_size = 128
     self.rnn_num_layers = 2
-    self.rnn_step_len = .5  # in sec
-    self.rnn_step_stride = 0.05
+    self.rnn_step_len = 0.5  # in sec
+    self.rnn_step_stride = 0.1
     self.rnn_num_steps = int((self.win_len - self.rnn_step_len) / self.rnn_step_stride) + 1
     self.num_att_heads = 4
     # SAR train
