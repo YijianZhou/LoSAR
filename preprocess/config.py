@@ -19,7 +19,7 @@ class Config(object):
     self.max_assoc_ratio = 0.5  # neg_cut_ratio = (max_ratio-assoc_ratio)/max_ratio
     self.num_aug = 2  # whether data augment
     self.max_noise = 0.5  # max noise level in pos aug
-    self.read_fpha = reader.read_fpha # import readers
+    self.read_fpha = reader.read_fpha  # import readers
     self.read_fpick = reader.read_fpick
     self.get_data_dict = reader.get_data_dict
     self.get_sta_dict = reader.get_sta_dict
