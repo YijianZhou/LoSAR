@@ -1,12 +1,11 @@
+""" Configure file for SAR_TED
+"""
 import sys
 sys.path.append('/home/zhouyj/software/SAR_TED/preprocess')
 import reader
 
 class Config(object):
-  """ Configure file for SAR_TED
-  """
   def __init__(self):
-
     # data prep & training sample cut
     self.samp_rate = 100
     self.win_len = 20  # sec
@@ -26,13 +25,10 @@ class Config(object):
     self.get_sta_dict = reader.get_sta_dict
     self.read_data = reader.read_data 
     # SAR model 
-    self.cnn_num_kernels = 32
-    self.cnn_kernel_size = 5
-    self.cnn_num_layers = 2
     self.rnn_hidden_size = 128
     self.rnn_num_layers = 2
-    self.rnn_step_len = .5  # in sec
-    self.rnn_step_stride = 0.05
+    self.rnn_step_len = 0.5  # in sec
+    self.rnn_step_stride = 0.1
     self.rnn_num_steps = int((self.win_len - self.rnn_step_len) / self.rnn_step_stride) + 1
     self.num_att_heads = 4
     # SAR train
