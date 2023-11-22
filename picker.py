@@ -4,8 +4,8 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 from obspy import UTCDateTime
-import config
 from models import SAR
+import config
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -70,18 +70,16 @@ class SAR_Picker(object):
     miss_chn = np.array([np.sum(st_raw_data[:, i*raw_stride : i*raw_stride+raw_win_npts]==0, axis=1)>win_len_npts/2 for i in range(num_win)])
     # 2. run SAR picker
     picks_raw = self.run_sar(st_data_cuda, start_time, num_win, miss_chn)
-    picks_raw = np.sort(picks_raw, order=['tp','ts'])
     num_picks = len(picks_raw)
     # 3.1 select picks
     print('3. select & write picks')
     to_drop = []
-    for ii in range(1,num_picks):
-        if abs(picks_raw['tp'][ii] - picks_raw['tp'][ii-1]) > tp_dev: continue
-        if abs(picks_raw['ts'][ii] - picks_raw['ts'][ii-1]) > ts_dev: continue
-        prob_current = np.mean([picks_raw['p_prob'][ii], picks_raw['s_prob'][ii]])
-        prob_old = np.mean([picks_raw['p_prob'][ii-1], picks_raw['s_prob'][ii-1]])
-        if prob_current>prob_old: to_drop.append(ii-1)
-        else: to_drop.append(ii)
+    for ii in range(num_picks):
+        is_nbr = (abs(picks_raw['tp'] - picks_raw['tp'][ii]) < tp_dev) \
+               * (abs(picks_raw['ts'] - picks_raw['ts'][ii]) < ts_dev)
+        if sum(is_nbr)==1: continue
+        prob_max = np.amax(picks_raw[is_nbr]['p_prob'] + picks_raw[is_nbr]['s_prob'])
+        if picks_raw[ii]['p_prob'] + picks_raw[ii]['s_prob'] != prob_max: to_drop.append(ii)
     picks_raw = np.delete(picks_raw, to_drop)
     print('  %s picks dropped'%len(to_drop))
     # 3.2 get s_amp & write fout

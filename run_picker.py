@@ -1,7 +1,6 @@
 """ Main function for stream picking with SAR_TED
 """
-import os, shutil, glob, sys
-sys.path.append('/home/zhouyj/software/SAR_TED/preprocess')
+import os
 import argparse
 import numpy as np
 import torch.multiprocessing as mp
