@@ -132,9 +132,10 @@ class SAR_Picker(object):
                 tp = t0 + step_len/2 + step_stride*p_idx
                 p_prob = p_probs[ii]
                 for jj, s_idx in enumerate(s_idxs):
+                    if s_idx<=p_idx: continue
                     ts = t0 + step_len/2 + step_stride*s_idx
                     s_prob = s_probs[jj]
-                    if ts>tp: picks_raw.append((tp, ts, p_prob, s_prob))
+                    picks_raw.append((tp, ts, p_prob, s_prob))
     print('  {} raw P&S picks | SAR run time {:.2f}s'.format(len(picks_raw), time.time()-t))
     return np.array(picks_raw, dtype=dtype)
 

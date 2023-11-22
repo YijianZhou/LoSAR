@@ -74,7 +74,7 @@ class Negative(Dataset):
     net_sta, date = sta_date.split('_')
     date = UTCDateTime(date)
     data_dict = get_data_dict(date, self.data_dir)
-    if net_sta not in data_dict: return train_paths_i, valid_paths_i
+    if net_sta not in data_dict or num_unassoc==0: return train_paths_i, valid_paths_i
     stream_paths = data_dict[net_sta]
     out_train = os.path.join(self.out_root, 'train', 'negative', sta_date)
     out_valid = os.path.join(self.out_root, 'valid', 'negative', sta_date)
