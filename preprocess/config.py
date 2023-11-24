@@ -41,6 +41,9 @@ class Config(object):
     # picking config
     self.trig_thres = 0.5
     self.picker_batch_size = 20
-    self.tp_dev = 1.5 # whether same pick in different sliding windows
+    self.tp_dev = 1.5  # merge picks in different sliding win
     self.ts_dev = 1.5
-    self.amp_win = [1,6] # sec pre-P & post-S for amp calc
+    self.amp_win = [1,6]  # sec pre-P & post-S for amp calc
+    self.rm_glitch = True
+    self.win_peak = 1
+    self.amp_ratio_thres = [5,10,2]  # Peak rm; P/P_tail; P/S

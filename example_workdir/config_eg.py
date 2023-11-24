@@ -19,7 +19,7 @@ class Config(object):
     self.max_assoc_ratio = 0.5  # neg_cut_ratio = (max_ratio-assoc_ratio)/max_ratio
     self.num_aug = 2  # whether data augment
     self.max_noise = 0.5  # max noise level in pos aug
-    self.read_fpha = reader.read_fpha # import readers
+    self.read_fpha = reader.read_fpha  # import readers
     self.read_fpick = reader.read_fpick
     self.get_data_dict = reader.get_data_dict
     self.get_sta_dict = reader.get_sta_dict
@@ -41,6 +41,9 @@ class Config(object):
     # picking config
     self.trig_thres = 0.5
     self.picker_batch_size = 20
-    self.tp_dev = 1.5 # whether same pick in different sliding windows
+    self.tp_dev = 1.5  # merge picks in different sliding win
     self.ts_dev = 1.5
-    self.amp_win = [1,6] # sec pre-P & post-S for amp calc
+    self.amp_win = [1,6]  # sec pre-P & post-S for amp calc
+    self.rm_glitch = True
+    self.win_peak = 1
+    self.amp_ratio_thres = [5,10,2]  # Peak rm; P/P_tail; P/S
