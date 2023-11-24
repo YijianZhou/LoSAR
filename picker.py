@@ -31,7 +31,10 @@ tp_dev = cfg.tp_dev
 ts_dev = cfg.ts_dev
 amp_win = cfg.amp_win
 amp_win_npts = int(sum(amp_win)*samp_rate)
-
+rm_glitch = cfg.rm_glitch
+amp_ratio_thres = cfg.amp_ratio_thres
+win_peak = cfg.win_peak
+win_peak_npts = int(win_peak * samp_rate)
 
 class SAR_Picker(object):
   """ SAR picker for raw stream data
@@ -71,8 +74,8 @@ class SAR_Picker(object):
     # 2. run SAR picker
     picks_raw = self.run_sar(st_data_cuda, start_time, num_win, miss_chn)
     num_picks = len(picks_raw)
-    # 3.1 select picks
-    print('3. select & write picks')
+    # 3.1 merge sliding-win picks
+    print('3. merge sliding-win picks')
     to_drop = []
     for ii in range(num_picks):
         is_nbr = (abs(picks_raw['tp'] - picks_raw['tp'][ii]) < tp_dev) \
@@ -82,13 +85,14 @@ class SAR_Picker(object):
         if picks_raw[ii]['p_prob'] + picks_raw[ii]['s_prob'] != prob_max: to_drop.append(ii)
     picks_raw = np.delete(picks_raw, to_drop)
     print('  %s picks dropped'%len(to_drop))
-    # 3.2 get s_amp & write fout
-    print('  get s_amp & write fout')
+    # 3.2 get s_amp & glitch removal
+    print('  get s_amp & glitch removal')
     picks = []
     for [tp, ts, p_prob, s_prob] in picks_raw:
         st = stream.slice(tp-amp_win[0], ts+amp_win[1]).copy()
         amp_data = np.array([tr.data[0:amp_win_npts] for tr in st])
-        s_amp = self.get_amp(amp_data)
+        s_amp = self.get_s_amp(amp_data)
+        if rm_glitch and self.remove_glitch(stream, tp, ts): continue
         picks.append([net_sta, tp, ts, s_amp, p_prob, s_prob])
         if fout:
             fout.write('{},{},{},{},{:.2f},{:.2f}\n'.format(net_sta, tp, ts, s_amp, p_prob, s_prob))
@@ -105,7 +109,7 @@ class SAR_Picker(object):
         # get win_data
         n_win = batch_size if batch_idx<num_batch-1 else num_win%batch_size
         if n_win==0: n_win = batch_size
-        win_idx_list = [ii + batch_idx*batch_size for ii in range(n_win)]
+        win_idx_list = [nn + batch_idx*batch_size for nn in range(n_win)]
         data_seq = self.st2seq(st_data_cuda, win_idx_list, miss_chn)
         pred_logits = self.model(data_seq)
         pred_probs = F.softmax(pred_logits, dim=-1).detach().cpu().numpy()
@@ -205,8 +209,60 @@ class SAR_Picker(object):
     return data
 
   # get S amplitide
-  def get_amp(self, velo):
+  def get_s_amp(self, velo):
     velo -= np.reshape(np.mean(velo, axis=1), [velo.shape[0],1])
     disp = np.cumsum(velo, axis=1)
     disp /= samp_rate
     return np.amax(np.sum(disp**2, axis=0))**0.5
+
+  # glitch removal based on PAL algorithm 
+  def remove_glitch(self, stream, tp, ts):
+    # 1. Peak amp ratio of P&S
+    p_amp_ratio = self.calc_peak_amp_ratio(stream.slice(tp, tp+win_peak*3))
+    if np.amin(p_amp_ratio) > amp_ratio_thres[0]: return True
+    s_amp_ratio = self.calc_peak_amp_ratio(stream.slice(ts, ts+win_peak*3))
+    if np.amin(s_amp_ratio) > amp_ratio_thres[0]: return True
+    # 2. amp ratio of P/P_tail & S
+    A1 = np.array([np.amax(tr.data)-np.amin(tr.data) for tr in stream.slice(tp, tp+(ts-tp)/2)])
+    A2 = np.array([np.amax(tr.data)-np.amin(tr.data) for tr in stream.slice(tp+(ts-tp)/2, ts)])
+    A3 = np.array([np.amax(tr.data)-np.amin(tr.data) for tr in stream.slice(ts, ts+(ts-tp)/2)])
+    A12 = min([A1[ii]/A2[ii] for ii in range(3)])
+    A13 = min([A1[ii]/A3[ii] for ii in range(3)])
+    if A12<amp_ratio_thres[1] and A13<amp_ratio_thres[2]: return False
+    else: return True
+
+  def calc_peak_amp_ratio(self, st):
+    amp_ratio = []
+    for tr in st:
+        idx0 = np.argmax(abs(tr.data[0:win_peak_npts]))
+        idx1 = idx0 + self.find_first_peak(tr.data[idx0:])
+        idx0 -= self.find_second_peak(tr.data[0:idx0][::-1])
+        idx1 += self.find_second_peak(tr.data[idx1:])+1
+        idx0 = max(0,idx0)
+        amp_peak = np.amax(tr.data[idx0:idx1]) - np.amin(tr.data[idx0:idx1])
+        amp_tail = np.amax(tr.data[idx1:2*idx1-idx0]) - np.amin(tr.data[idx1:2*idx1-idx0])
+        amp_ratio.append(amp_peak/amp_tail)
+    return amp_ratio
+
+  def find_first_peak(self, data):
+    npts = len(data)
+    if npts<2: return 0
+    delta_d = data[1:npts] - data[0:npts-1]
+    if min(delta_d)>=0 or max(delta_d)<=0: return 0
+    neg_idx = np.where(delta_d<0)[0]
+    pos_idx = np.where(delta_d>=0)[0]
+    return max(neg_idx[0], pos_idx[0])
+
+  def find_second_peak(self, data):
+    npts = len(data)
+    if npts<2: return 0
+    delta_d = data[1:npts] - data[0:npts-1]
+    if min(delta_d)>=0 or max(delta_d)<=0: return 0
+    neg_idx = np.where(delta_d<0)[0]
+    pos_idx = np.where(delta_d>=0)[0]
+    if len(neg_idx)==0 or len(pos_idx)==0: return 0
+    first_peak = max(neg_idx[0], pos_idx[0])
+    neg_peak = neg_idx[neg_idx>first_peak]
+    pos_peak = pos_idx[pos_idx>first_peak]
+    if len(neg_peak)==0 or len(pos_peak)==0: return first_peak
+    return max(neg_peak[0], pos_peak[0])
