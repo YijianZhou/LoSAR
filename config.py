@@ -32,18 +32,18 @@ class Config(object):
     self.rnn_num_steps = int((self.win_len - self.rnn_step_len) / self.rnn_step_stride) + 1
     self.num_att_heads = 4
     # SAR train
-    self.num_epochs = 10
+    self.num_epochs = 15
     self.batch_size = 128
     self.lr = 1e-4
     self.neg_ratio = 0.2
     self.ckpt_step = 100
     self.summary_step = 20
     # picking config
-    self.trig_thres = 0.5
+    self.trig_thres = 0.3
     self.picker_batch_size = 20
     self.tp_dev = 1.5  # merge picks in different sliding win
     self.ts_dev = 1.5
     self.amp_win = [1,6]  # sec pre-P & post-S for amp calc
     self.rm_glitch = True
     self.win_peak = 1
-    self.amp_ratio_thres = [5,10,2]  # Peak rm; P/P_tail; P/S
+    self.amp_ratio_thres = [6,10,2]  # Peak rm; P/P_tail; P/S
