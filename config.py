@@ -46,4 +46,4 @@ class Config(object):
     self.amp_win = [1,6]  # sec pre-P & post-S for amp calc
     self.rm_glitch = True
     self.win_peak = 1
-    self.amp_ratio_thres = [6,10,2]  # Peak rm; P/P_tail; P/S
+    self.amp_ratio_thres = [5,8,3]  # Peak rm; P/P_tail; P/S
