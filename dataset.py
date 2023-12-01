@@ -21,6 +21,7 @@ class Positive_Negative(Dataset):
     self.neg_tar = zarr.open(neg_tar_path, mode='r')
     num_pos, num_neg = self.pos_data.shape[0], self.neg_data.shape[0]
     self.num_samples = num_pos
+    self.neg_ratio = num_neg / num_pos
     self.pos_idx = np.random.permutation(num_pos)
     self.neg_idx = np.tile(np.arange(num_neg), int(num_pos/num_neg)+1)
     self.neg_idx = np.random.permutation(self.neg_idx)[0:num_pos]

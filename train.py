@@ -19,7 +19,6 @@ def main():
     # training params
     cfg = config.Config()
     lr = cfg.lr
-    neg_ratio = cfg.neg_ratio
     num_epochs = cfg.num_epochs
     summary_step = cfg.summary_step
     ckpt_step = cfg.ckpt_step
@@ -33,6 +32,7 @@ def main():
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True)
     valid_sampler = BatchSampler(RandomSampler(valid_set, replacement=True), batch_size=batch_size, drop_last=False)
     valid_loader = DataLoader(valid_set, batch_sampler=valid_sampler, pin_memory=True)
+    neg_ratio = train_set.neg_ratio
     num_batch = len(train_loader)
     # import model
     model = SAR() 
