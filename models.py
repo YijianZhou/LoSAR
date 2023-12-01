@@ -20,12 +20,14 @@ class SAR(nn.Module):
         num_layers=self.num_layers,
         bidirectional=True,
         batch_first=True)
-    self.attention = nn.MultiheadAttention(embed_dim=2*self.hidden_size,
-        num_heads=self.num_heads,
-        batch_first=True)
+    if self.num_heads>0:
+        self.attention = nn.MultiheadAttention(embed_dim=2*self.hidden_size,
+            num_heads=self.num_heads,
+            batch_first=True)
+    else: self.attention = None
     self.fc_layer = nn.Linear(2*self.hidden_size, 3)
 
   def forward(self, x):
     x, _ = self.gru_layer(x)
-    x, _ = self.attention(query=x, key=x, value=x)  # self attention
+    if self.attention: x, _ = self.attention(query=x, key=x, value=x)  # self attention
     return self.fc_layer(x)
