@@ -83,6 +83,7 @@ def train_step(model, data, target, neg_ratio, criterion, optimizer):
     model.train()
     bs = int(target.size(0)/2)
     num_pos, num_neg = bs, int(bs*neg_ratio)
+    if num_neg==0: num_neg = 1
     data = data[0:num_pos+num_neg]
     target = target[0:num_pos+num_neg]
     # model prediction
