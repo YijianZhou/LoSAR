@@ -1,5 +1,6 @@
-# SAR_TED
-A Training-based Earthquake Detection (TED) workflow that utilize Self-Attention RNN (SAR) for phase picking  
+# LoSAR
+Construction of Long-Term Seismic Catalog with Deep Learning: A Workflow for Localized Self-Attention RNN (LoSAR)  
+![Zhou et al., (2024)](./doc/LoSAR_workflow.jpg)
 
 ## Usage  
 ### 1. Train SAR model  
@@ -13,8 +14,8 @@ python 2_sac2zarr.py
 ```bash
 python 3_train.py
 ```
-### 2. Apply SAR on continuous data & associate picks  
-**2.1 run SAR**  
+### 2. Apply LoSAR on continuous data & associate picks  
+**2.1 run LoSAR**  
 ```bash
 python 4_pick_stream.py
 ```  
