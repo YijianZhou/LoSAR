@@ -5,7 +5,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # i/o paths
-sar_dir = '/home/zhouyj/software/SAR_TED'
+sar_dir = '/home/zhouyj/software/LoSAR'
 shutil.copyfile('config_eg.py', os.path.join(sar_dir, 'config.py'))
 # train params
 gpu_idx = 0

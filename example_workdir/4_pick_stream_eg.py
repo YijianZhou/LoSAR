@@ -3,7 +3,7 @@
 import os, shutil
 
 # i/o paths
-sar_dir = '/home/zhouyj/software/SAR_TED'
+sar_dir = '/home/zhouyj/software/LoSAR'
 shutil.copyfile('config_eg.py', os.path.join(sar_dir, 'config.py'))
 fsta = 'input/example_pal_format1.sta'
 data_dir = '/data/Example_data'
