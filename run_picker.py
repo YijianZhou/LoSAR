@@ -1,4 +1,4 @@
-""" Main function for stream picking with SAR_TED
+""" Main function for stream picking with LoSAR
 """
 import os
 import argparse

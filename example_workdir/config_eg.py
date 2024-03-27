@@ -1,7 +1,7 @@
-""" Configure file for SAR_TED
+""" Configure file for LoSAR
 """
 import sys
-sys.path.append('/home/zhouyj/software/SAR_TED/preprocess')
+sys.path.append('/home/zhouyj/software/LoSAR/preprocess')
 import reader
 
 class Config(object):
