@@ -23,15 +23,16 @@ hypo_root = cfg.hypo_root
 
 # read fpha with evid
 def read_fpha(fpha):
-    pha_dict = {}
+    pha_dict, mag_dict = {}, {}
     f=open(fpha); lines=f.readlines(); f.close()
     for line in lines:
         codes = line.split(',')
         if len(codes[0])>=14:
             evid = codes[-1][:-1]
             pha_dict[evid] = []
+            mag_dict[evid] = float(codes[4])
         else: pha_dict[evid].append(line)
-    return pha_dict
+    return pha_dict, mag_dict
 
 # write hypoDD input file
 def write_fin(i,j):
@@ -81,11 +82,10 @@ class Run_HypoDD(Dataset):
         evid = codes[0]
         if int(evid) not in evid_list: continue
         pha_lines = pha_dict[evid]
+        mag = mag_dict[evid]
         # get loc info
         lat, lon, dep = codes[1:4]
-        try:
-            dep = round(float(dep) - dep_corr, 2)
-            mag = float(codes[16])
+        try: dep = round(float(dep) - dep_corr, 2)
         except: continue
         # get time info
         year, mon, day, hour, mnt, sec = codes[10:16]
@@ -108,7 +108,7 @@ class Run_HypoDD(Dataset):
 if __name__ == '__main__':
     # 1. format fpha & fsta
     print('format input files')
-    pha_dict = read_fpha(fpha)
+    pha_dict, mag_dict = read_fpha(fpha)
     os.system('python mk_sta.py')
     os.system('python mk_pha.py')
     evid_lists = np.load('input/evid_lists.npy', allow_pickle=True)

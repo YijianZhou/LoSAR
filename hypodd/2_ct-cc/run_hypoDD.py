@@ -69,11 +69,10 @@ class Run_HypoDD(Dataset):
         evid = codes[0]
         if int(evid) not in evid_list: continue
         pha_lines = event_dict[evid][1]
+        mag = event_dict[evid][0][-1]
         # get loc info
         lat, lon, dep = codes[1:4]
-        try:
-            dep = round(float(dep) - dep_corr, 2)
-            mag = float(codes[16])
+        try: dep = round(float(dep) - dep_corr, 2)
         except: continue
         # get time info
         year, mon, day, hour, mnt, sec = codes[10:16]

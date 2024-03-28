@@ -32,8 +32,8 @@ for i,line in enumerate(lines):
         data_id, temp_id = codes[1:3]
         if data_id not in event_dict or temp_id not in event_dict: 
             to_add = False; continue
-        data_lat, data_lon, data_dep = event_dict[data_id][0]
-        temp_lat, temp_lon, temp_dep = event_dict[temp_id][0]
+        data_lat, data_lon, data_dep = event_dict[data_id][0][0:3]
+        temp_lat, temp_lon, temp_dep = event_dict[temp_id][0][0:3]
         # 1. select loc dev
         loc_dev = calc_dist_km([data_lat,temp_lat], [data_lon,temp_lon])
         dep_dev = abs(data_dep - temp_dep)

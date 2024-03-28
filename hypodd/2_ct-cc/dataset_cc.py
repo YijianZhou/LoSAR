@@ -108,8 +108,8 @@ def read_fpha_dict(fpha):
         codes = line.split(',')
         if len(codes[0])>10: 
             evid = codes[0].split('_')[0]
-            lat, lon, dep = [float(code) for code in codes[2:5]]
-            event_dict[evid] = [[lat, lon, dep],[]]
+            lat, lon, dep, mag = [float(code) for code in codes[2:6]]
+            event_dict[evid] = [[lat, lon, dep, mag],[]]
         else: event_dict[evid][-1].append(line)
     return event_dict
 

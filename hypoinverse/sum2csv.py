@@ -17,7 +17,6 @@ out_good = open(cfg.out_good,'w')
 out_pha = open(cfg.out_pha,'w')
 out_pha_full = open(cfg.out_pha_full,'w')
 
-
 def write_csv(fout, line, evid, is_full=False):
     codes = line.split()
     date, hrmn, sec = codes[0:3]
