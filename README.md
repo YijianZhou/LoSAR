@@ -23,6 +23,11 @@ python 4_pick_stream.py
 ```bash
 python 5_parallel_assoc.py
 ```  
+### 3. Locate and Relocate LoSAR detections  
+**3.1 HypoINV absolute location**  
+**3.2 HypoDD double-difference relocation**  
+3.2.1 two-step relocation: dt.ct and dt.cc  
+3.2.2 one-step relocation: dt.ct + dt.cc joint inversion  
 
 
 ### Reference  
