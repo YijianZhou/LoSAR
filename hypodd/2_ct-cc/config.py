@@ -17,7 +17,7 @@ class Config(object):
     self.event_root = '/data/bigdata/zhouyj/Example_events'
     self.data_dir = '/data/Example_data'
     # 2. ph2dt_cc
-    # event linkage (initial calc & further selection)
+    # 2.1 event linkage (initial calc & further selection)
     self.cc_thres = [0.3, 0.3]    # CC thres for event pair
     self.loc_dev_thres = [3, 3]    # km, maximum location separation
     self.dep_dev_thres = [4, 4]    # km, maximum location separation
@@ -28,7 +28,7 @@ class Config(object):
     self.max_nbr = 100     # max number of neighbor event
     self.temp_mag = 0.    # min mag for templates
     self.temp_sta = 4    # min sta_num for templates
-    # data preprocess
+    # 2.2 data preprocess
     self.freq_band = [1.,16.]
     self.samp_rate = 100
     self.chn_p = [2]    # chn for P picking
