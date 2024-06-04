@@ -3,7 +3,6 @@
 import os
 import numpy as np
 from obspy import UTCDateTime
-from dataset_cc import get_event_list
 import config
 import warnings
 warnings.filterwarnings("ignore")
