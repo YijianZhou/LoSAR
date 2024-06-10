@@ -32,7 +32,7 @@ class Config(object):
     self.rnn_num_steps = int((self.win_len - self.rnn_step_len) / self.rnn_step_stride) + 1
     self.num_att_heads = 4
     # SAR train
-    self.num_epochs = 15
+    self.num_epochs = 20
     self.batch_size = 128
     self.lr = 1e-4
     self.neg_ratio = 0.2
