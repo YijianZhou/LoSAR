@@ -6,8 +6,6 @@ from torch.utils.data import Dataset
 import zarr
 from obspy import read, Stream
 import numpy as np
-import config
-cfg = config.Config()
 
 class Positive_Negative(Dataset):
   def __init__(self, zarr_path, zarr_group):
