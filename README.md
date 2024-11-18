@@ -15,29 +15,23 @@ AI-PAL: Localize AI Phase Picker with Rule-based Algorithm for Generalized Earth
 
 ### 2. SAR  
 2.1 Train SAR model  
-2.2 Run SAR picker & PAL associator  
-2.3 Locate and Relocate SAR-PAL detections  
-
-- **Usage** (see *run_sar* for example workdir)  
-(1) Cut event windows & generate [Zarr](https://zarr.readthedocs.io/en/stable/) database  
 ```bash
 python 1_cut_train-samples.py
 python 2_sac2zarr.py
-```  
-(2) Train SAR model  
-```bash
 python 3_train.py
-```
-(3) Run SAR picker and PAL associator  
+```  
+
+2.2 Run SAR picker & PAL associator  
 ```bash
 python 4_pick_stream.py
 python 5_parallel_assoc.py
 ```  
-(4) Locate and Relocate SAR-PAL detections  
-**3.1 HypoINV absolute location**  
-**3.2 HypoDD double-difference relocation**  
-3.2.1 two-step relocation: dt.ct and dt.cc  
-3.2.2 one-step relocation: dt.ct + dt.cc joint inversion  
+
+2.3 Locate and Relocate SAR-PAL detections  
+2.3.1 HypoINV absolute location  
+2.3.2 HypoDD double-difference relocation  
+2.3.2.1 two-step relocation: dt.ct and dt.cc  
+2.3.2.2 one-step relocation: dt.ct + dt.cc joint inversion  
 
 ## Installation  
 AI-PAL is a set of codes. All you need is to setup proper Python environment. This can be accomplished easily by installing [Anaconda](https://www.anaconda.com/products/individual#Downloads), [Obspy](https://github.com/obspy/obspy/wiki/Installation-via-Anaconda), and [Zarr](https://zarr.readthedocs.io/en/stable/) sequentially.  
