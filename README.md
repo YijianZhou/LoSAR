@@ -30,8 +30,8 @@ python 5_parallel_assoc.py
 #### 2.3 Locate and Relocate SAR-PAL detections  
 2.3.1 HypoINV absolute location  
 2.3.2 HypoDD double-difference relocation  
-2.3.2.1 two-step relocation: dt.ct and dt.cc  
-2.3.2.2 one-step relocation: dt.ct + dt.cc joint inversion  
+(1) two-step relocation: dt.ct and dt.cc  
+(2) one-step relocation: dt.ct + dt.cc joint inversion  
 
 ## Tutorials  
 
