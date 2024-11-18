@@ -33,7 +33,13 @@ python 5_parallel_assoc.py
 2.3.2.1 two-step relocation: dt.ct and dt.cc  
 2.3.2.2 one-step relocation: dt.ct + dt.cc joint inversion  
 
+## Tutorials  
+
+2021/10 Online training in Chinese: vedio recording on [KouShare](https://www.koushare.com/lives/room/549779)  
+2022/08 Online training in Chinese: vedio recording on [KouShare](https://www.koushare.com/video/videodetail/31656)  
+
 ## Installation  
+
 AI-PAL is a set of codes. All you need is to setup proper Python environment. This can be accomplished easily by installing [Anaconda](https://www.anaconda.com/products/individual#Downloads), [Obspy](https://github.com/obspy/obspy/wiki/Installation-via-Anaconda), and [Zarr](https://zarr.readthedocs.io/en/stable/) sequentially.  
 
 ### Reference  
