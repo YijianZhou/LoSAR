@@ -13,7 +13,7 @@ AI-PAL: Localize AI Phase Picker with Rule-based Algorithm for Generalized Earth
 (1) Prepare continuous data into consistent directory structure  
 (2) Run PAL  
 
-### 2. SAR  
+### 2. SAR (see *run_sar* for example workdir)  
 #### 2.1 Train SAR model  
 ```bash
 python 1_cut_train-samples.py
