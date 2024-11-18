@@ -1,36 +1,53 @@
-# LoSAR
-Construction of Long-Term Seismic Catalog with Deep Learning: A Workflow for Localized Self-Attention RNN (LoSAR)  
-![Zhou et al., (2024)](./doc/LoSAR_workflow.jpg)
+# AI-PAL  
+AI-PAL: Localize AI Phase Picker with Rule-based Algorithm for Generalized Earthquake Detection  
 
-## Usage  
-### 1. Train SAR model  
-**1.1 run [PAL](https://github.com/YijianZhou/PAL) to generate local training samples**  
-**1.2 cut event windows & generate [Zarr](https://zarr.readthedocs.io/en/stable/) database**  
+## **AI-PAL Workflow**  
+![Zhou et al., (2024)](./doc/AI-PAL_workflow.jpg)  
+
+### 1. PAL  
+1.1 phase **P**icking  
+1.2 phase **A**ssociation  
+1.3 event **L**ocation  
+
+- **Usage** (see *run_pal* for example workdir)  
+(1) Prepare continuous data into consistent directory structure  
+(2) Run PAL  
+
+### 2. SAR  
+2.1 Train SAR model  
+2.2 Run SAR picker & PAL associator  
+2.3 Locate and Relocate SAR-PAL detections  
+
+- **Usage** (see *run_sar* for example workdir)  
+(1) Cut event windows & generate [Zarr](https://zarr.readthedocs.io/en/stable/) database  
 ```bash
 python 1_cut_train-samples.py
 python 2_sac2zarr.py
 ```  
-**1.3 train SAR model**  
+(2) Train SAR model  
 ```bash
 python 3_train.py
 ```
-### 2. Apply LoSAR on continuous data & associate picks  
-**2.1 run LoSAR**  
+(3) Run SAR picker and PAL associator  
 ```bash
 python 4_pick_stream.py
-```  
-**2.2 associate picks with PAL associator**  
-```bash
 python 5_parallel_assoc.py
 ```  
-### 3. Locate and Relocate LoSAR detections  
+(4) Locate and Relocate SAR-PAL detections  
 **3.1 HypoINV absolute location**  
 **3.2 HypoDD double-difference relocation**  
 3.2.1 two-step relocation: dt.ct and dt.cc  
 3.2.2 one-step relocation: dt.ct + dt.cc joint inversion  
 
+## Installation  
+AI-PAL is a set of codes. All you need is to setup proper Python environment. This can be accomplished easily by installing [Anaconda](https://www.anaconda.com/products/individual#Downloads), [Obspy](https://github.com/obspy/obspy/wiki/Installation-via-Anaconda), and [Zarr](https://zarr.readthedocs.io/en/stable/) sequentially.  
 
 ### Reference  
-- **Zhou, Y.**, H. Yue, Q. Kong, & S. Zhou (2019). Hybrid Event Detection and Phase‐Picking Algorithm Using Convolutional and Recurrent Neural Networks. *Seismological Research Letters*; 90 (3): 1079–1087. doi: [10.1785/0220180319](https://doi.org/10.1785/0220180319)  
-- **Zhou, Y.**, H. Yue, L. Fang, S. Zhou, L. Zhao, & A. Ghosh (2021). An Earthquake Detection and Location Architecture for Continuous Seismograms: Phase Picking, Association, Location, and Matched Filter (PALM). *Seismological Research Letters*; 93(1): 413–425. doi: [10.1785/0220210111](https://doi.org/10.1785/0220210111)  
-- **Zhou, Y.**, A. Ghosh, L. Fang, H. Yue, S. Zhou, & Y. Su (2021). A High-Resolution Seismic Catalog for the 2021 MS6.4/Mw6.1 YangBi Earthquake Sequence, Yunnan, China: Application of AI picker and Matched Filter. *Earthquake Science*; 34(5): 390-398.doi: [10.29382/eqs-2021-0031](https://doi.org/10.29382/eqs-2021-0031)  
+
+- **Zhou, Y.**<sup>`*`</sup>, H. Ding, A. Ghosh, & Z. Ge (2024, under review). AI-PAL: Localize AI Phase Picker with Rule-based Algorithm for Generalized Earthquake Detection. *Journal of Geophysical Research: Solid Earth*  
+
+- **Zhou, Y.**, A. Ghosh, L. Fang<sup>`*`</sup>, H. Yue<sup>`*`</sup>, S. Zhou, & Y. Su (2021). A High-Resolution Seismic Catalog for the 2021 M<sub>S</sub>6.4/M<sub>w</sub>6.1 YangBi Earthquake Sequence, Yunnan, China: Application of AI picker and Matched Filter. *Earthquake Science*; 34(5): 390-398. doi: [10.29382/eqs-2021-0031](https://doi.org/10.29382/eqs-2021-0031)  
+
+- **Zhou, Y.**, H. Yue, L. Fang, S. Zhou<sup>`*`</sup>, L. Zhao, & A. Ghosh (2021). An Earthquake Detection and Location Architecture for Continuous Seismograms: Phase Picking, Association, Location, and Matched Filter (PALM). *Seismological Research Letters*; 93(1): 413–425. doi: [10.1785/0220210111](https://doi.org/10.1785/0220210111)  
+
+- **Zhou, Y.**, H. Yue<sup>`*`</sup>, Q. Kong, & S. Zhou (2019). Hybrid Event Detection and Phase-Picking Algorithm Using Convolutional and Recurrent Neural Networks. *Seismological Research Letters*; 90(3): 1079–1087. doi: [10.1785/0220180319](https://doi.org/10.1785/0220180319)  

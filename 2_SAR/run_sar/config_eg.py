@@ -1,7 +1,7 @@
 """ Configure file for LoSAR
 """
 import sys
-sys.path.append('/home/zhouyj/software/LoSAR/preprocess')
+sys.path.append('/home/zhouyj/software/2_SAR/preprocess')
 import reader
 
 class Config(object):
