@@ -42,7 +42,7 @@ python 5_parallel_assoc.py
 
 AI-PAL is a set of codes. All you need is to setup proper Python environment. This can be accomplished easily by installing [Anaconda](https://www.anaconda.com/products/individual#Downloads), [Obspy](https://github.com/obspy/obspy/wiki/Installation-via-Anaconda), and [Zarr](https://zarr.readthedocs.io/en/stable/) sequentially.  
 
-### Reference  
+## Reference  
 
 - **Zhou, Y.**<sup>`*`</sup>, H. Ding, A. Ghosh, & Z. Ge (2024, under review). AI-PAL: Localize AI Phase Picker with Rule-based Algorithm for Generalized Earthquake Detection. *Journal of Geophysical Research: Solid Earth*  
 
