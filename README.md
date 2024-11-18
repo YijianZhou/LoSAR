@@ -14,20 +14,20 @@ AI-PAL: Localize AI Phase Picker with Rule-based Algorithm for Generalized Earth
 (2) Run PAL  
 
 ### 2. SAR  
-2.1 Train SAR model  
+#### 2.1 Train SAR model  
 ```bash
 python 1_cut_train-samples.py
 python 2_sac2zarr.py
 python 3_train.py
 ```  
 
-2.2 Run SAR picker & PAL associator  
+#### 2.2 Run SAR picker & PAL associator  
 ```bash
 python 4_pick_stream.py
 python 5_parallel_assoc.py
 ```  
 
-2.3 Locate and Relocate SAR-PAL detections  
+#### 2.3 Locate and Relocate SAR-PAL detections  
 2.3.1 HypoINV absolute location  
 2.3.2 HypoDD double-difference relocation  
 2.3.2.1 two-step relocation: dt.ct and dt.cc  
