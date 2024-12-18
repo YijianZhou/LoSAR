@@ -1,7 +1,7 @@
 # AI-PAL  
 AI-PAL: Localize AI Phase Picker with Rule-based Algorithm for Generalized Earthquake Detection  
 
-## **AI-PAL Workflow**  
+## AI-PAL Workflow  
 ![Zhou et al., (2024)](./doc/AI-PAL_workflow.jpg)  
 
 ### 1. PAL  
