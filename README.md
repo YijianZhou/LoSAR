@@ -40,7 +40,7 @@ python 5_parallel_assoc.py
 
 ## Installation  
 
-AI-PAL is a set of codes. All you need is to setup proper Python environment. This can be accomplished easily by installing [Anaconda](https://www.anaconda.com/products/individual#Downloads), [Obspy](https://github.com/obspy/obspy/wiki/Installation-via-Anaconda), and [Zarr](https://zarr.readthedocs.io/en/stable/) sequentially.  
+AI-PAL is a set of codes. All you need is to setup proper Python environment. This can be accomplished easily by installing [Anaconda](https://www.anaconda.com/products/individual#Downloads), [Obspy](https://github.com/obspy/obspy/wiki/Installation-via-Anaconda), [PyTorch](https://pytorch.org/), and [Zarr](https://zarr.readthedocs.io/en/stable/) sequentially.  
 
 ## Reference  
 
